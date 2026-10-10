@@ -55,3 +55,4 @@ el beneficio baja. Ese barrido es el experimento S2 del plan.
   chequeo de recarga de la calculadora).
 - Los parámetros térmicos (`TAU_H`, límites) son supuestos; hay que tomarlos de la ficha
   técnica de una nevera de vacunas o declarar un rango.
+# clinickeep
