@@ -1,0 +1,4 @@
+ESP32_GENERIC-*.bin
+firmware.bin
+__pycache__/
+*.pyc

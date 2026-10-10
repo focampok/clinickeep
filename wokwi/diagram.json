@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "author": "ClinicKeep",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_grid",
+      "top": -67.6,
+      "left": -153.8,
+      "attrs": { "bounce": "0" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_a",
+      "top": -49.3,
+      "left": -278.6,
+      "attrs": { "value": "409" }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "temp1",
+      "top": 165.5,
+      "left": -210.3,
+      "attrs": { "temperature": "25" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_ds",
+      "top": 119.15,
+      "left": -211.2,
+      "rotate": 90,
+      "attrs": { "value": "4700" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_b",
+      "top": -70,
+      "left": 220.8,
+      "attrs": { "transistor": "pnp" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_c",
+      "top": 64.4,
+      "left": 220.8,
+      "attrs": { "transistor": "pnp" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_b",
+      "top": -99.6,
+      "left": 378.6,
+      "attrs": { "color": "green", "label": "Zona B" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_c",
+      "top": 34.8,
+      "left": 378.6,
+      "attrs": { "color": "yellow", "label": "Zona C" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_led_b",
+      "top": -53.65,
+      "left": 432,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_led_c",
+      "top": 80.75,
+      "left": 432,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "board-ssd1306",
+      "id": "oled1",
+      "top": 233.54,
+      "left": 125.03,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 204,
+      "left": -94.8,
+      "attrs": { "volume": "0.3" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_k",
+      "top": 227,
+      "left": -240,
+      "attrs": { "color": "blue", "label": "SIM k", "bounce": "0", "key": "K" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_outage",
+      "top": -105.8,
+      "left": -240,
+      "attrs": { "color": "red", "label": "CORTE", "bounce": "0", "key": "G" }
+    }
+  ],
+  "connections": [
+    ["esp:TX", "$serialMonitor:RX", "", []],
+    ["esp:RX", "$serialMonitor:TX", "", []],
+
+    ["sw_grid:2", "esp:34", "green", ["v0"]],
+    ["sw_grid:1", "esp:3V3", "red", ["v0"]],
+    ["sw_grid:3", "esp:GND.2", "black", ["v0"]],
+
+    ["pot_a:SIG", "esp:35", "violet", ["v0"]],
+    ["pot_a:VCC", "esp:3V3", "red", ["v0"]],
+    ["pot_a:GND", "esp:GND.2", "black", ["v0"]],
+
+    ["temp1:VCC", "esp:3V3", "red", ["v0"]],
+    ["temp1:GND", "esp:GND.1", "black", ["v0"]],
+    ["temp1:DQ", "esp:4", "orange", ["v0"]],
+    ["r_ds:2", "temp1:DQ", "orange", ["h0"]],
+    ["r_ds:1", "esp:3V3", "red", ["h0"]],
+
+    ["relay_b:VCC", "esp:3V3", "red", ["v0"]],
+    ["relay_b:GND", "esp:GND.3", "black", ["v0"]],
+    ["relay_b:IN", "esp:26", "blue", ["v0"]],
+    ["relay_b:COM", "esp:3V3", "red", ["v0"]],
+    ["relay_b:NO", "led_b:A", "green", ["h20"]],
+    ["led_b:C", "r_led_b:1", "green", ["v0"]],
+    ["r_led_b:2", "esp:GND.3", "black", ["v0"]],
+
+    ["relay_c:VCC", "esp:3V3", "red", ["v0"]],
+    ["relay_c:GND", "esp:GND.3", "black", ["v0"]],
+    ["relay_c:IN", "esp:27", "blue", ["v0"]],
+    ["relay_c:COM", "esp:3V3", "red", ["v0"]],
+    ["relay_c:NO", "led_c:A", "gold", ["h20"]],
+    ["led_c:C", "r_led_c:1", "gold", ["v0"]],
+    ["r_led_c:2", "esp:GND.3", "black", ["v0"]],
+
+    ["oled1:VCC", "esp:3V3", "red", ["v0"]],
+    ["oled1:GND", "esp:GND.3", "black", ["v0"]],
+    ["oled1:SDA", "esp:21", "green", ["v0"]],
+    ["oled1:SCL", "esp:22", "blue", ["v0"]],
+
+    ["bz1:1", "esp:GND.1", "black", ["v0"]],
+    ["bz1:2", "esp:25", "orange", ["v0"]],
+
+    ["btn_k:1.r", "esp:13", "blue", ["v0"]],
+    ["btn_k:2.l", "esp:GND.1", "black", ["v0"]],
+
+    ["btn_outage:1.r", "esp:14", "red", ["v0"]],
+    ["btn_outage:2.l", "esp:GND.2", "black", ["v0"]]
+  ],
+  "dependencies": {}
+}
