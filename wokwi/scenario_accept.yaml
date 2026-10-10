@@ -1,0 +1,23 @@
+name: ClinicKeep acceptance
+version: 1
+author: ClinicKeep
+steps:
+  - wait-serial: '"mode": "NORMAL"'
+  - delay: 500ms
+  - set-control:
+      part-id: btn_outage
+      control: pressed
+      value: 1
+  - wait-serial: '"mode": "CORTE"'
+  - delay: 200ms
+  - write-serial: "K=600\r\n"
+  - wait-serial: '"k": 600'
+  - wait-serial: '"mode": "AHORRO"'
+  - wait-serial: '"mode": "CRITICO"'
+  - delay: 500ms
+  - set-control:
+      part-id: btn_outage
+      control: pressed
+      value: 0
+  - wait-serial: '"mode": "RESTAURACION"'
+  - wait-serial: '"mode": "NORMAL"'
