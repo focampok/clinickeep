@@ -98,6 +98,10 @@ arranque. Corrida en verde (`evidence/wokwi_accept_cli.log`, `EXIT=0`, 12 aserci
 | CRITICO | 1 | 1 | ambas sin energía |
 | NORMAL tras restaurar | 0 | 0 | ambas con energía |
 
+## Hardware real
+
+En el ESP32 real los pines quedan en alta impedancia al resetear. Antes de conectar cargas, verificar con multímetro que el módulo de relé real interpreta ese estado como relé abierto; si no, añadir una resistencia pull-up/pull-down según la hoja de datos del módulo. En simulación se usa transistor: pnp (activo en bajo).
+
 ## Pendiente / recomendación
 
 Con `pnp` el estado seguro es el nivel **alto**, que no es el estado natural del pin

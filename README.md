@@ -29,15 +29,15 @@ y el motor de escenarios usan exactamente el mismo código.
 cd clinickeep
 python3 -m venv .venv
 source .venv/bin/activate
-pip install pytest
-pytest -q          # deben pasar las 14 pruebas
+pip install pytest matplotlib
+pytest -q          # 33 pasan
 python3 demo.py    # tabla del corte y comparación con/sin ClinicKeep
 ```
 
 ## Reglas de diseño
 
 1. **A (nevera) nunca se corta por software.** `relay_a` siempre es `True`.
-2. **El shedding es monótono** durante un corte: B no se reabre hasta que vuelva la red.
+2. **El shedding es monótono** durante un corte: B no se reabre hasta que vuelva la red. Al caer la red se abre **solo C**; **B** se abre en AHORRO, cuando la autonomía total baja de `T_RESERVA_H` (6 h).
 3. **Temporizadores en tiempo real; energía en tiempo simulado** (`k`, el reloj SIM).
 4. **Tiempo seguro = autonomía de A + holdover**, ambos en el mismo reloj.
 5. Si falla el sensor de potencia con la red caída: modo conservador (se abren B y C, A sigue).
