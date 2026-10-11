@@ -26,6 +26,7 @@ TOKEN = "token-de-prueba"
 AUTORIZADO = {"Authorization": "Bearer " + TOKEN}
 
 # Un estado real, copiado de evidence/wokwi_accept_serial.log (modo NORMAL).
+# Formato ANTIGUO: 11 campos, el de la Fase 3.
 ESTADO = {
     "t_ms": 6665,
     "k": 1,
@@ -40,6 +41,19 @@ ESTADO = {
     "events": [],
 }
 
+# Formato NUEVO (Fase 3b): 16 campos. temp_c es la lectura del DS18B20, que en
+# la maqueta esta a 25 C (el ambiente, no la caja).
+CAMPOS_3B = ("grid_ok", "alarm", "aut_total_h", "temp_c", "temp_ok")
+ESTADO_NUEVO = dict(ESTADO, grid_ok=True, alarm=False, aut_total_h=12.007,
+                    temp_c=25.0, temp_ok=True)
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+# Logs congelados: el viejo (11 campos) y el regenerado con el firmware nuevo.
+LOG_VIEJO = os.path.join(DATA_DIR, "serial_viejo_11_campos.log")
+LOG_NUEVO = os.path.join(DATA_DIR, "serial_nuevo_16_campos.log")
+
+# Log vivo del repo (fuera de server/): si no esta, las pruebas que lo usan
+# se saltan, para que server/ siga siendo autocontenido.
 EVIDENCE = os.path.join(RAIZ, "evidence", "wokwi_accept_serial.log")
 
 
@@ -60,3 +74,14 @@ def cliente(tmp_path, monkeypatch):
 @pytest.fixture
 def estado():
     return json.loads(json.dumps(ESTADO))
+
+
+@pytest.fixture
+def estado_nuevo():
+    return json.loads(json.dumps(ESTADO_NUEVO))
+
+
+def saltar_si_falta(path):
+    """Las pruebas que dependen de archivos fuera de server/ no lo exigen."""
+    if not os.path.exists(path):
+        pytest.skip("falta %s (server/ es autocontenido sin el)" % path)

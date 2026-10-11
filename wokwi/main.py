@@ -213,13 +213,21 @@ def emit_json(t_ms, out):
         "t_ms": t_ms,
         "k": k,
         "mode": out["mode"],
+        # Red filtrada y alarma: ya los calcula la politica; se emiten tal cual
+        # para que el dashboard no tenga que deducirlos del modo.
+        "grid_ok": out["grid_ok"],
+        "alarm": out["alarm"],
         "soc": round(out["soc"], 4),
         "relay_a": out["relay_a"],
         "relay_b": out["relay_b"],
         "relay_c": out["relay_c"],
         "aut_a_h": None if out["aut_a_h"] is None else round(out["aut_a_h"], 3),
+        "aut_total_h": None if out["aut_total_h"] is None else round(out["aut_total_h"], 3),
         "holdover_h": None if hold is None else round(hold, 3),
         "safe_h": None if out["safe_h"] is None else round(out["safe_h"], 3),
+        # Sensores: temp_c es None mientras no haya lectura valida del DS18B20.
+        "temp_c": None if _last_temp is None else round(_last_temp, 2),
+        "temp_ok": _temp_ok,
         "events": out["events"],
     }
     print(json.dumps(line))

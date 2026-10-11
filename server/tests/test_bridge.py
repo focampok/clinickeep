@@ -2,6 +2,10 @@
 
 Sin red real: o se usa --dry-run, o se sustituye urllib.request.urlopen por un
 doble que cuenta llamadas y devuelve lo que haga falta.
+
+Los logs congelados (viejo de 11 campos y nuevo de 16) viven en server/tests/data,
+asi que estas pruebas no dependen de evidence/. Las que si lo usan se saltan si
+falta: server/ tiene que poder probarse por si solo.
 """
 
 import io
@@ -10,9 +14,20 @@ import urllib.error
 
 import pytest
 
-from conftest import EVIDENCE
+from conftest import EVIDENCE, LOG_NUEVO, LOG_VIEJO, saltar_si_falta
 
-import serial_to_ingest as puente
+puente = pytest.importorskip("serial_to_ingest")
+
+# Firmware de la Fase 3 -> Fase 3b: 11 campos -> 16.
+CAMPOS_VIEJOS = 11
+CAMPOS_NUEVOS = 16
+ESTADOS_LOG_VIEJO = 75          # el log congelado del firmware viejo
+
+
+def _estados_de(ruta):
+    """Estados que el puente deberia reenviar de un log."""
+    with open(ruta, encoding="utf-8", errors="replace") as fh:
+        return [o for o in (puente.extract_json(l) for l in fh) if o and puente.is_state(o)]
 
 
 # --- Filtrado de lineas ------------------------------------------------------
@@ -35,22 +50,81 @@ def test_extrae_json_con_prefijo():
     assert puente.extract_json("[1, 2, 3]") is None          # JSON, pero no objeto
 
 
-def test_dry_run_con_el_log_de_evidencia(capsys, tmp_path):
-    """Con las lineas reales de evidence/: 75 estados y nada de boot ni cmd."""
-    codigo = puente.main(["--file", EVIDENCE, "--dry-run"])
+# --- Los dos formatos, de punta a punta --------------------------------------
+
+@pytest.mark.parametrize("ruta,campos", [
+    (LOG_VIEJO, CAMPOS_VIEJOS),
+    (LOG_NUEVO, CAMPOS_NUEVOS),
+])
+def test_log_congelado_valida_y_pasa_el_esquema(ruta, campos):
+    """Ambos formatos pasan el filtro del puente y el esquema del servidor."""
+    saltar_si_falta(ruta)
+    import app
+
+    estados = _estados_de(ruta)
+    assert estados, "el log no tiene estados"
+    for o in estados:
+        assert len(o) == campos, sorted(o)
+        app.State(**o)                       # no debe lanzar ValidationError
+
+    if campos == CAMPOS_VIEJOS:
+        assert len(estados) == ESTADOS_LOG_VIEJO
+        # El formato viejo no trae los campos de la Fase 3b.
+        assert not any("temp_c" in o or "grid_ok" in o for o in estados)
+    else:
+        # El formato nuevo los trae todos, siempre.
+        for o in estados:
+            assert all(c in o for c in ("grid_ok", "alarm", "aut_total_h", "temp_c", "temp_ok"))
+
+
+def test_el_log_viejo_sigue_funcionando_por_el_puente(capsys, tmp_path):
+    """El log del firmware viejo se reenvia igual: 75 estados y nada de boot/cmd."""
+    saltar_si_falta(LOG_VIEJO)
+    assert puente.main(["--file", LOG_VIEJO, "--dry-run"]) == 0
     salida = capsys.readouterr()
-    assert codigo == 0
 
     lineas = [l for l in salida.out.splitlines() if l.strip()]
-    assert len(lineas) == 75
+    assert len(lineas) == ESTADOS_LOG_VIEJO
     objetos = [json.loads(l) for l in lineas]
     assert all("mode" in o and "t_ms" in o for o in objetos)
     assert all(o.get("cmd") is None and o.get("boot") is None for o in objetos)
+    assert all("temp_c" not in o for o in objetos)      # es el formato viejo
+    assert "estados %d | enviados %d | fallidos 0" % (ESTADOS_LOG_VIEJO, ESTADOS_LOG_VIEJO) in salida.err
 
-    # El resumen va a stderr y cuadra con el censo del log.
-    assert "estados 75 | enviados 75 | fallidos 0 | lineas ignoradas 16" in salida.err
-    # En dry-run no se envia nada: nada de peticiones.
+
+def test_el_log_nuevo_pasa_por_el_puente(capsys):
+    """El log regenerado con el firmware nuevo: reenvia todo, con los 16 campos."""
+    saltar_si_falta(LOG_NUEVO)
+    esperados = _estados_de(LOG_NUEVO)
+    assert puente.main(["--file", LOG_NUEVO, "--dry-run"]) == 0
+    salida = capsys.readouterr()
+
+    lineas = [l for l in salida.out.splitlines() if l.strip()]
+    assert len(lineas) == len(esperados)
+    objetos = [json.loads(l) for l in lineas]
+    assert all("temp_c" in o and "grid_ok" in o and "alarm" in o for o in objetos)
+    assert any(o["temp_c"] is not None for o in objetos)      # hubo lecturas validas
+    assert "estados %d | enviados %d | fallidos 0" % (len(esperados), len(esperados)) in salida.err
+
+
+def test_dry_run_con_el_log_vivo_de_evidence(capsys):
+    """El log que usa el repo entero (evidence/) tambien pasa, sea cual sea su formato."""
+    saltar_si_falta(EVIDENCE)
+    esperados = _estados_de(EVIDENCE)
+    assert len(esperados) >= 50
+
+    assert puente.main(["--file", EVIDENCE, "--dry-run"]) == 0
+    salida = capsys.readouterr()
+    lineas = [l for l in salida.out.splitlines() if l.strip()]
+    assert len(lineas) == len(esperados)
     assert "no se envia nada" in salida.err
+
+    import app
+    for o in esperados:
+        app.State(**o)
+    # Si el log ya es del firmware nuevo, todos los estados traen los 5 campos.
+    if any("grid_ok" in o for o in esperados):
+        assert all("grid_ok" in o for o in esperados)
 
 
 def test_dry_run_de_un_archivo_mezclado(capsys, tmp_path):
@@ -63,22 +137,28 @@ def test_dry_run_de_un_archivo_mezclado(capsys, tmp_path):
         '{"cmd":"K","k":600}\n'
         '{"t_ms":1,"k":1,"mode":"NORMAL","soc":1.0,"relay_a":true,"relay_b":true,'
         '"relay_c":true,"aut_a_h":12.0,"holdover_h":0.5,"safe_h":12.5,"events":[]}\n'
+        '{"t_ms":2,"k":1,"mode":"CORTE","grid_ok":false,"alarm":false,"soc":0.5,'
+        '"relay_a":true,"relay_b":true,"relay_c":false,"aut_a_h":6.0,"aut_total_h":9.0,'
+        '"holdover_h":0.5,"safe_h":6.5,"temp_c":25.0,"temp_ok":true,"events":["shed_c"]}\n'
         'linea suelta sin json\n',
         encoding="utf-8")
     assert puente.main(["--file", str(mezcla), "--dry-run"]) == 0
     salida = capsys.readouterr()
-    assert len([l for l in salida.out.splitlines() if l.strip()]) == 1
-    assert "estados 1 | enviados 1 | fallidos 0 | lineas ignoradas 6" in salida.err
+    assert len([l for l in salida.out.splitlines() if l.strip()]) == 2
+    assert "estados 2 | enviados 2 | fallidos 0 | lineas ignoradas 6" in salida.err
+    assert '"grid_ok": false' in salida.out          # el nuevo conserva sus campos
 
 
 def test_dry_run_desde_stdin(capsys, monkeypatch):
     monkeypatch.setattr("sys.stdin", io.StringIO(
         '{"boot_ready":true}\n'
-        '{"t_ms":9,"k":1,"mode":"CORTE","soc":0.5,"relay_a":true,"relay_b":true,'
-        '"relay_c":false,"aut_a_h":6.0,"holdover_h":0.5,"safe_h":6.5,"events":[]}\n'))
+        '{"t_ms":9,"k":1,"mode":"CORTE","grid_ok":false,"alarm":false,"soc":0.5,'
+        '"relay_a":true,"relay_b":true,"relay_c":false,"aut_a_h":6.0,"aut_total_h":9.0,'
+        '"holdover_h":0.5,"safe_h":6.5,"temp_c":25.0,"temp_ok":true,"events":[]}\n'))
     assert puente.main(["--dry-run"]) == 0
     salida = capsys.readouterr()
     assert '"mode": "CORTE"' in salida.out
+    assert '"temp_c": 25.0' in salida.out
     assert "boot" not in salida.out
 
 
@@ -163,20 +243,6 @@ def test_422_no_se_reintenta(monkeypatch):
 
 def test_sin_token_avisa_y_no_envia(capsys, monkeypatch):
     monkeypatch.delenv("INGEST_TOKEN", raising=False)
-    assert puente.main(["--file", EVIDENCE]) == 2
+    saltar_si_falta(LOG_VIEJO)
+    assert puente.main(["--file", LOG_VIEJO]) == 2
     assert "falta el token" in capsys.readouterr().err
-
-
-def test_todas_las_lineas_de_evidencia_pasan_el_esquema():
-    """Los 75 estados del log valido contra el esquema del servidor.
-
-    Une el puente con la ingesta: si el firmware cambia un campo, esta prueba
-    (o la de ingesta) lo detecta antes que el dashboard.
-    """
-    import app
-
-    with open(EVIDENCE, encoding="utf-8", errors="replace") as fh:
-        estados = [o for o in (puente.extract_json(l) for l in fh) if o and puente.is_state(o)]
-    assert len(estados) == 75
-    for o in estados:
-        app.State(**o)          # no debe lanzar ValidationError

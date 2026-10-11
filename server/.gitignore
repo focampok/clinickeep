@@ -1,5 +1,7 @@
 # Base SQLite en tiempo de ejecucion (incluye los -wal/-shm de WAL).
-data/
+# Anclado a /data/: sin el ancla tambien ocultaria server/tests/data/, que son
+# los logs congelados que usan las pruebas.
+/data/
 *.db
 *.db-wal
 *.db-shm

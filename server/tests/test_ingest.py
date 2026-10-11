@@ -4,7 +4,47 @@ import json
 
 import pytest
 
-from conftest import AUTORIZADO, TOKEN
+from conftest import (AUTORIZADO, CAMPOS_3B, LOG_NUEVO, LOG_VIEJO, TOKEN,
+                      saltar_si_falta)
+
+
+def _estados_del_log(ruta):
+    """Parser minimo y local, para no depender de tools/ desde server/tests/.
+
+    (El filtrado del puente se prueba aparte, en test_bridge.py, que si importa
+    tools/serial_to_ingest.py y se salta entero cuando no esta.)
+    """
+    estados = []
+    with open(ruta, encoding="utf-8", errors="replace") as fh:
+        for linea in fh:
+            i = linea.find("{")
+            if i < 0:
+                continue
+            try:
+                obj = json.loads(linea[i:])
+            except ValueError:
+                continue
+            if isinstance(obj, dict) and "mode" in obj and "t_ms" in obj:
+                estados.append(obj)
+    return estados
+
+
+@pytest.mark.parametrize("ruta,campos", [(LOG_VIEJO, 11), (LOG_NUEVO, 16)])
+def test_los_logs_congelados_validan_el_esquema(ruta, campos):
+    """Los dos formatos reales (11 y 16 campos) pasan el esquema del servidor."""
+    saltar_si_falta(ruta)
+    import app
+
+    estados = _estados_del_log(ruta)
+    assert len(estados) == 75
+    for o in estados:
+        assert len(o) == campos
+        app.State(**o)                     # no debe lanzar ValidationError
+
+    if campos == 16:
+        assert all(o["temp_c"] is not None and o["temp_ok"] is not None for o in estados)
+    else:
+        assert all("temp_c" not in o and "grid_ok" not in o for o in estados)
 
 
 def test_ingesta_valida(cliente, estado):
@@ -22,8 +62,10 @@ def test_ingesta_valida(cliente, estado):
     assert ev["ts_server"]
     assert ev["safe_h"] == pytest.approx(12.541)
 
-    # Y el servidor no inventa campos: los que devuelve son los del firmware.
-    assert set(ev) == {"id", "ts_server", "simulado"} | set(estado)
+    # Y el servidor no inventa campos: los que devuelve son los del firmware
+    # (los 11 que manda este evento) mas los 5 opcionales de la Fase 3b, que
+    # aqui llegan vacios.
+    assert set(ev) == {"id", "ts_server", "simulado"} | set(estado) | set(CAMPOS_3B)
 
 
 def test_sin_token(cliente, estado):
@@ -129,6 +171,63 @@ def test_retencion_de_5000(cliente, estado):
     eventos = cliente.get("/api/events?limit=5000").json()["events"]
     assert len(eventos) == app.MAX_EVENTS_LIMIT
     assert eventos[-1]["t_ms"] == 100004
+
+
+def test_evento_antiguo_de_11_campos_sigue_validando(cliente, estado):
+    """El formato de la Fase 3 (sin los campos 3b) no se rompe."""
+    assert len(estado) == 11
+    assert cliente.post("/ingest", json=estado, headers=AUTORIZADO).status_code == 201
+
+    ev = cliente.get("/api/latest").json()["event"]
+    # Los campos nuevos existen en la respuesta, pero como None.
+    for campo in CAMPOS_3B:
+        assert campo in ev
+        assert ev[campo] is None
+
+
+def test_evento_nuevo_de_16_campos_valida_y_guarda_los_valores(cliente, estado_nuevo):
+    """El formato de la Fase 3b trae los 5 campos nuevos y se guardan tal cual."""
+    assert len(estado_nuevo) == 16
+    r = cliente.post("/ingest", json=estado_nuevo, headers=AUTORIZADO)
+    assert r.status_code == 201
+
+    ev = cliente.get("/api/latest").json()["event"]
+    assert ev["grid_ok"] is True
+    assert ev["alarm"] is False
+    assert ev["aut_total_h"] == pytest.approx(12.007)
+    assert ev["temp_c"] == pytest.approx(25.0)
+    assert ev["temp_ok"] is True
+
+    # Devuelve los 16 del firmware, mas id/ts_server/simulado del servidor.
+    assert set(ev) == {"id", "ts_server", "simulado"} | set(estado_nuevo)
+
+
+def test_campos_3b_no_rompen_extra_forbid(cliente, estado_nuevo):
+    """Sigue siendo estricto: un campo de mas da 422, aunque los 3b sean opcionales."""
+    for inventado in ("humedad", "temp_c2", "grid", "alarms"):
+        assert cliente.post("/ingest", json=dict(estado_nuevo, **{inventado: 1}),
+                            headers=AUTORIZADO).status_code == 422
+
+    # Y un tipo equivocado en un campo 3b tampoco pasa.
+    assert cliente.post("/ingest", json=dict(estado_nuevo, temp_c="caliente"),
+                        headers=AUTORIZADO).status_code == 422
+    assert cliente.post("/ingest", json=dict(estado_nuevo, grid_ok="si"),
+                        headers=AUTORIZADO).status_code == 422
+
+
+def test_mezcla_de_formatos_en_la_misma_base(cliente, estado, estado_nuevo):
+    """Un evento viejo y uno nuevo conviven, y cada uno trae lo suyo."""
+    cliente.post("/ingest", json=estado, headers=AUTORIZADO)
+    cliente.post("/ingest", json=dict(estado_nuevo, mode="CORTE", grid_ok=False),
+                 headers=AUTORIZADO)
+
+    viejos, nuevos = cliente.get("/api/events").json()["events"]
+    assert viejos["temp_c"] is None and viejos["grid_ok"] is None
+    assert nuevos["temp_c"] == pytest.approx(25.0) and nuevos["grid_ok"] is False
+
+    # El dashboard tiene que servir tanto el evento viejo como el nuevo.
+    html = cliente.get("/").text
+    assert "grid_ok" in html and "temp_c" in html
 
 
 def test_dos_ingestas_se_guardan_en_orden(cliente, estado):

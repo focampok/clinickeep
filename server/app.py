@@ -69,6 +69,15 @@ class State(BaseModel):
     safe_h: float | None = None
     events: list[str] = Field(default_factory=list)
 
+    # Fase 3b: el firmware nuevo tambien emite estos. Todos son opcionales
+    # (default None), asi que un evento antiguo de 11 campos sigue validando
+    # igual y el dashboard cae a su derivacion cuando llegan como None.
+    grid_ok: bool | None = None
+    alarm: bool | None = None
+    aut_total_h: float | None = None
+    temp_c: float | None = None
+    temp_ok: bool | None = None
+
     @field_validator("mode")
     @classmethod
     def _mode_conocido(cls, v):
@@ -108,6 +117,25 @@ def _connect():
     return conn
 
 
+# Columnas que anadio la Fase 3b, para poder migrar bases ya existentes
+# (incluida la del volumen de Railway) sin perder los eventos guardados.
+COLUMNAS_3B = (
+    ("grid_ok", "INTEGER"),
+    ("alarm", "INTEGER"),
+    ("aut_total_h", "REAL"),
+    ("temp_c", "REAL"),
+    ("temp_ok", "INTEGER"),
+)
+
+
+def _migrar(conn):
+    actuales = {fila["name"] for fila in conn.execute("PRAGMA table_info(events)")}
+    for nombre, tipo in COLUMNAS_3B:
+        if nombre not in actuales:
+            # nombre y tipo son constantes de este modulo, no entrada externa
+            conn.execute("ALTER TABLE events ADD COLUMN %s %s" % (nombre, tipo))
+
+
 def init_db():
     with _lock:
         conn = _connect()
@@ -130,16 +158,25 @@ def init_db():
                     holdover_h  REAL,
                     safe_h      REAL,
                     events      TEXT    NOT NULL,
-                    raw         TEXT    NOT NULL
+                    raw         TEXT    NOT NULL,
+                    grid_ok     INTEGER,
+                    alarm       INTEGER,
+                    aut_total_h REAL,
+                    temp_c      REAL,
+                    temp_ok     INTEGER
                 )
                 """
             )
+            _migrar(conn)
             conn.commit()
         finally:
             conn.close()
 
 
 def _row_to_event(row):
+    def opt_bool(valor):
+        return None if valor is None else bool(valor)
+
     return {
         "id": row["id"],
         "ts_server": row["ts_server"],
@@ -155,7 +192,18 @@ def _row_to_event(row):
         "holdover_h": row["holdover_h"],
         "safe_h": row["safe_h"],
         "events": json.loads(row["events"]),
+        # Fase 3b: None en los eventos guardados antes de estos campos.
+        "grid_ok": opt_bool(row["grid_ok"]),
+        "alarm": opt_bool(row["alarm"]),
+        "aut_total_h": row["aut_total_h"],
+        "temp_c": row["temp_c"],
+        "temp_ok": opt_bool(row["temp_ok"]),
     }
+
+
+def _opt_int(valor):
+    """None se guarda como NULL; True/False como 1/0."""
+    return None if valor is None else int(valor)
 
 
 def store_event(state: State):
@@ -169,14 +217,17 @@ def store_event(state: State):
                 """
                 INSERT INTO events (ts_server, simulado, t_ms, k, mode, soc,
                                     relay_a, relay_b, relay_c, aut_a_h,
-                                    holdover_h, safe_h, events, raw)
-                VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    holdover_h, safe_h, events, raw,
+                                    grid_ok, alarm, aut_total_h, temp_c, temp_ok)
+                VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ts_server, state.t_ms, state.k, state.mode, state.soc,
                     int(state.relay_a), int(state.relay_b), int(state.relay_c),
                     state.aut_a_h, state.holdover_h, state.safe_h,
                     json.dumps(state.events), raw,
+                    _opt_int(state.grid_ok), _opt_int(state.alarm),
+                    state.aut_total_h, state.temp_c, _opt_int(state.temp_ok),
                 ),
             )
             # Retencion: dejar solo los ultimos MAX_EVENTS por id.

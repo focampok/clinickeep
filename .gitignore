@@ -9,4 +9,6 @@ out/
 *.db
 *.db-wal
 *.db-shm
-data/
+# Anclado: solo el /data/ de la raiz. Sin el ancla tambien ocultaria
+# server/tests/data/, que guarda los logs congelados de las pruebas.
+/data/

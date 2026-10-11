@@ -146,6 +146,14 @@
   .mono { font-variant-numeric: tabular-nums; }
   .tag { display: inline-block; border: 1px solid var(--line); border-radius: .3rem; padding: 0 .3rem; font-size: .78rem; }
 
+  /* Mini-serie de temperatura: SVG sin librerias. Los colores van por clase
+     (no por atributo) para que las variables CSS del tema apliquen. */
+  .spark { width: 100%; height: auto; display: block; margin: .35rem 0 0; }
+  .spark polyline { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .spark circle { fill: var(--accent); }
+  .spark line.guia { stroke: var(--line); stroke-width: 1; }
+  .spark text { fill: var(--muted); }
+
   figure { margin: 0; }
   figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: .5rem; background: #fff; }
   .btn {
@@ -224,23 +232,29 @@
       </div>
 
       <div class="card">
-        <h3>Temperatura</h3>
+        <h3>Temperatura (sensor ambiente)</h3>
         <p class="big" id="temp-texto">no disponible</p>
-        <p class="note">El firmware <strong>no emite</strong> la temperatura en el JSON de serie
-          (vive en <code>_last_temp</code>, solo entra a <code>policy.step()</code>).
-          Pendiente: añadir la clave a <code>emit_json()</code>. Ver <code>docs/INGEST_SCHEMA.md</code>.</p>
+        <div id="temp-serie"></div>
+        <ul class="zones">
+          <li><span>T_HI · techo de control (caja)</span><b class="mono">5.0 °C</b></li>
+          <li><span>T_LIM · límite seguro (caja)</span><b class="mono">7.5 °C</b></li>
+        </ul>
+        <p class="note" id="temp-nota">El firmware <strong>no emite</strong> la temperatura en el JSON
+          de serie. Ver <code>docs/INGEST_SCHEMA.md</code>.</p>
       </div>
 
       <div class="card">
         <h3>Red y alarma</h3>
         <ul class="zones">
-          <li><span>Red eléctrica</span><b id="red-texto">—</b></li>
-          <li><span>Alarma</span><b id="alarma-texto">—</b></li>
+          <li><span>Red eléctrica <span class="tag" id="red-origen">—</span></span><b id="red-texto">—</b></li>
+          <li><span>Alarma <span class="tag" id="alarma-origen">—</span></span><b id="alarma-texto">—</b></li>
+          <li><span>Autonomía total</span><b class="mono" id="autotal-texto">—</b></li>
           <li><span>Reloj SIM (k)</span><b class="mono" id="k-texto">—</b></li>
         </ul>
-        <p class="note">Derivados del <code>mode</code>: hay red en NORMAL/RESTAURACION y la alarma
-          suena en CRITICO/FALLO_SENSOR (así los calcula <code>policy.py</code>). El firmware no
-          emite <code>grid_ok</code> ni <code>alarm</code> por serie.</p>
+        <p class="note">Con el firmware nuevo se usan sus <code>grid_ok</code> y <code>alarm</code>
+          (etiqueta <em>nativo</em>); si llegan como <code>null</code> (eventos antiguos) se derivan
+          del <code>mode</code> (etiqueta <em>derivado</em>): hay red en NORMAL/RESTAURACION y suena
+          alarma en CRITICO/FALLO_SENSOR, igual que lo calcula <code>policy.py</code>.</p>
       </div>
     </div>
 
@@ -290,6 +304,10 @@ const MODOS = {
 };
 const POLL_MS = 2000;
 const STALE_MS = 10000;
+/* Umbrales de la nevera (config.py: T_HI_C / T_LIM_C). SUPUESTOS. */
+const T_HI = 5.0, T_LIM = 7.5;
+
+function datoNativo(v) { return v !== null && v !== undefined; }
 
 function fmtH(h, dec = 2) {
   if (h === null || h === undefined) return "n/d";
@@ -325,11 +343,106 @@ function pintarModo(ev) {
   $("modo-extra").textContent = "t_ms " + ev.t_ms + " · k=" + ev.k + " · " + hora(ev.ts_server);
 }
 
+/* Mini-serie de los ultimos puntos de temperatura (SVG a mano, sin librerias). */
+function sparkline(puntos) {
+  const w = 240, h = 64, pad = 6, fuente = 10;
+  const vals = puntos.map(p => p.temp_c);
+  if (!vals.length) return "";
+  let lo = Math.min(Math.min.apply(null, vals), T_HI);
+  let hi = Math.max(Math.max.apply(null, vals), T_LIM);
+  if (hi - lo < 1) { hi += 0.5; lo -= 0.5; }
+  const x = i => pad + (w - 2 * pad) * (puntos.length === 1 ? 0 : i / (puntos.length - 1));
+  const y = v => pad + (h - 2 * pad) * (1 - (v - lo) / (hi - lo));
+  const linea = puntos.map((p, i) => x(i).toFixed(1) + "," + y(p.temp_c).toFixed(1)).join(" ");
+  // Las etiquetas van a extremos opuestos (izquierda/derecha): las dos guias
+  // caen cerca y asi no se pisan ni se salen del viewBox.
+  const guia = (v, txt, anclaje) =>
+    '<line class="guia" x1="' + pad + '" x2="' + (w - pad) + '" y1="' + y(v).toFixed(1) +
+    '" y2="' + y(v).toFixed(1) + '" stroke-dasharray="4 3"></line>' +
+    '<text x="' + (anclaje === "start" ? pad : w - pad) + '" y="' + (y(v) - 3).toFixed(1) +
+    '" text-anchor="' + anclaje + '" font-size="' + fuente + '">' + txt + "</text>";
+  const min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  const ult = puntos[puntos.length - 1].temp_c;
+  return '<svg class="spark" role="img" viewBox="0 0 ' + w + " " + h + '" ' +
+    'aria-label="Serie de temperatura de los ultimos ' + puntos.length + ' estados: minimo ' +
+    min.toFixed(1) + ' grados, maximo ' + max.toFixed(1) + ' grados, ultimo ' + ult.toFixed(1) +
+    ' grados; umbrales de referencia T_HI 5.0 y T_LIM 7.5">' +
+    guia(T_LIM, "T_LIM 7.5", "end") + guia(T_HI, "T_HI 5.0", "start") +
+    '<polyline points="' + linea + '"></polyline>' +
+    '<circle cx="' + x(puntos.length - 1).toFixed(1) + '" cy="' + y(ult).toFixed(1) + '" r="2.5"></circle>' +
+    "</svg>" +
+    '<p class="note mono">ultimos ' + puntos.length + " puntos · min " + min.toFixed(1) +
+    " · max " + max.toFixed(1) + " · ultimo " + ult.toFixed(1) + " °C</p>";
+}
+
+/* Temperatura: solo si el evento trae temp_c (firmware nuevo). */
+function pintarTemperatura(eventos) {
+  const ultimo = eventos.length ? eventos[eventos.length - 1] : null;
+  const salida = $("temp-texto"), caja = $("temp-serie"), nota = $("temp-nota");
+
+  if (!ultimo) {
+    salida.textContent = "sin datos";
+    caja.innerHTML = "";
+    nota.textContent = "Esperando lecturas de la ingesta…";
+    return;
+  }
+  if (ultimo.temp_ok === false) {
+    salida.textContent = "sensor sin lectura";
+    caja.innerHTML = "";
+    nota.innerHTML = "El firmware reporta <code>temp_ok: false</code>. Sin lectura del DS18B20 no hay " +
+      "holdover térmico, así que el tiempo seguro es solo la autonomía de A.";
+    return;
+  }
+  if (typeof ultimo.temp_c !== "number") {
+    salida.textContent = "no disponible";
+    caja.innerHTML = "";
+    nota.innerHTML = "Este evento no trae <code>temp_c</code> (formato antiguo de 11 campos, anterior a " +
+      "la Fase 3b). El evento es válido; solo no hay temperatura que mostrar.";
+    return;
+  }
+
+  const t = ultimo.temp_c;
+  salida.innerHTML = t.toFixed(1) + ' <span class="unit">°C</span>';
+  const conTemp = eventos.filter(e => typeof e.temp_c === "number");
+  caja.innerHTML = sparkline(conTemp);
+
+  const valores = conTemp.map(e => e.temp_c);
+  const plana = valores.length > 1 && Math.min.apply(null, valores) === Math.max.apply(null, valores);
+  if (plana) {
+    caja.innerHTML += '<p class="note">La serie sale plana porque el DS18B20 del simulador está ' +
+      'fijado a ' + t.toFixed(1) + ' °C (<code>diagram.json</code>): no hay variación que dibujar.</p>';
+  }
+
+  const estado = t >= T_LIM ? "por encima de T_LIM (7.5 °C)"
+    : t >= T_HI ? "en la banda de holdover, entre T_HI y T_LIM"
+    : "por debajo de T_HI (5.0 °C)";
+  nota.innerHTML = "Lectura " + estado + ". Ojo con la magnitud: el DS18B20 de esta maqueta mide el " +
+    "<strong>ambiente</strong> (es el <code>t_amb_c</code> que entra a <code>holdover_h()</code>), y " +
+    "T_HI/T_LIM son umbrales de la <strong>caja</strong>, que no tiene sensor propio: las líneas son " +
+    "referencia, no un control. T_HI/T_LIM son SUPUESTOS (<code>config.py</code>).";
+}
+
+function pintarRedYAlarma(ev) {
+  // Nativo si el firmware nuevo lo manda; si no, respaldo derivado del modo.
+  const usaRed = datoNativo(ev.grid_ok);
+  const red = usaRed ? ev.grid_ok : (ev.mode === "NORMAL" || ev.mode === "RESTAURACION");
+  $("red-texto").innerHTML = red ? '<span class="on">hay red</span>' : '<span class="off">sin red</span>';
+  $("red-origen").textContent = usaRed ? "nativo" : "derivado";
+
+  const usaAlarma = datoNativo(ev.alarm);
+  const alarma = usaAlarma ? ev.alarm : (ev.mode === "CRITICO" || ev.mode === "FALLO_SENSOR");
+  $("alarma-texto").innerHTML = alarma ? '<span class="off">activa</span>' : '<span class="on">en reposo</span>';
+  $("alarma-origen").textContent = usaAlarma ? "nativo" : "derivado";
+
+  $("autotal-texto").textContent = fmtH(ev.aut_total_h);
+}
+
 function pintar(ev) {
   pintarModo(ev);
   if (!ev) {
     ["zona-b", "zona-c", "soc-texto", "safe-texto", "auta-texto", "holo-texto",
-     "red-texto", "alarma-texto", "k-texto"].forEach(id => { $(id).textContent = "—"; });
+     "red-texto", "alarma-texto", "autotal-texto", "k-texto"].forEach(id => { $(id).textContent = "—"; });
+    ["red-origen", "alarma-origen"].forEach(id => { $(id).textContent = "—"; });
     $("zona-b").className = ""; $("zona-c").className = "";
     $("red-texto").className = ""; $("alarma-texto").className = "";
     $("soc-bar").style.width = "0%";
@@ -353,11 +466,7 @@ function pintar(ev) {
     ? "Sin sensor de temperatura no hay holdover: el tiempo seguro es solo la batería."
     : "Tiempo seguro = autonomía de A + holdover térmico.";
 
-  const red = (ev.mode === "NORMAL" || ev.mode === "RESTAURACION");
-  $("red-texto").innerHTML = red ? '<span class="on">hay red</span>' : '<span class="off">sin red</span>';
-  const alarma = (ev.mode === "CRITICO" || ev.mode === "FALLO_SENSOR");
-  $("alarma-texto").innerHTML = alarma
-    ? '<span class="off">activa</span>' : '<span class="on">en reposo</span>';
+  pintarRedYAlarma(ev);
   $("k-texto").textContent = "x" + ev.k;
 }
 
@@ -433,6 +542,7 @@ async function refrescar() {
       ultimaNovedad = Date.now();
     }
     pintar(nuevo);
+    pintarTemperatura(datos.events);
     pintarTabla(datos.events);
     $("cap-eventos").textContent = (datos.events.length || 0) === 0
       ? "Sin datos todavía (0 de 5000 eventos guardados)."

@@ -1,0 +1,91 @@
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:4200
+load:0x40078000,len:15236
+load:0x40080400,len:3332
+entry 0x400805a8
+{"boot":"clinickeep","relays":"open"}
+{"boot_ready":true}
+{"relay_a": true, "k": 1, "relay_c": true, "relay_b": true, "soc": 1.0, "aut_a_h": 12.007, "holdover_h": 0.534, "safe_h": 12.541, "events": [], "t_ms": 6665, "mode": "NORMAL"}
+{"cmd":"GRID0"}
+{"relay_a": true, "k": 1, "relay_c": true, "relay_b": true, "soc": 1.0, "aut_a_h": 12.007, "holdover_h": 0.534, "safe_h": 12.541, "events": [], "t_ms": 7666, "mode": "NORMAL"}
+{"relay_a": true, "k": 1, "relay_c": true, "relay_b": true, "soc": 1.0, "aut_a_h": 12.007, "holdover_h": 0.534, "safe_h": 12.541, "events": [], "t_ms": 8667, "mode": "NORMAL"}
+{"relay_a": true, "k": 1, "relay_c": false, "relay_b": true, "soc": 1.0, "aut_a_h": 12.007, "holdover_h": 0.534, "safe_h": 12.541, "events": [], "t_ms": 9668, "mode": "CORTE"}
+{"cmd":"K","k":600}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.9791, "aut_a_h": 11.757, "holdover_h": 0.534, "safe_h": 12.291, "events": [], "t_ms": 10668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.9583, "aut_a_h": 11.507, "holdover_h": 0.534, "safe_h": 12.041, "events": [], "t_ms": 11668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.9375, "aut_a_h": 11.257, "holdover_h": 0.534, "safe_h": 11.791, "events": [], "t_ms": 12668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.9167, "aut_a_h": 11.007, "holdover_h": 0.534, "safe_h": 11.541, "events": [], "t_ms": 13668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.8958, "aut_a_h": 10.757, "holdover_h": 0.534, "safe_h": 11.291, "events": [], "t_ms": 14668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.875, "aut_a_h": 10.507, "holdover_h": 0.534, "safe_h": 11.041, "events": [], "t_ms": 15668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.8542, "aut_a_h": 10.257, "holdover_h": 0.534, "safe_h": 10.791, "events": [], "t_ms": 16668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.8334, "aut_a_h": 10.006, "holdover_h": 0.534, "safe_h": 10.541, "events": [], "t_ms": 17668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.8125, "aut_a_h": 9.756, "holdover_h": 0.534, "safe_h": 10.291, "events": [], "t_ms": 18668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.7917, "aut_a_h": 9.506, "holdover_h": 0.534, "safe_h": 10.04, "events": [], "t_ms": 19668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.7709, "aut_a_h": 9.256, "holdover_h": 0.534, "safe_h": 9.79, "events": [], "t_ms": 20668, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.75, "aut_a_h": 9.006, "holdover_h": 0.534, "safe_h": 9.54, "events": [], "t_ms": 21669, "mode": "CORTE"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.7327, "aut_a_h": 8.797, "holdover_h": 0.534, "safe_h": 9.332, "events": [], "t_ms": 22670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.7188, "aut_a_h": 8.631, "holdover_h": 0.534, "safe_h": 9.165, "events": [], "t_ms": 23670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.7049, "aut_a_h": 8.464, "holdover_h": 0.534, "safe_h": 8.998, "events": [], "t_ms": 24670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.691, "aut_a_h": 8.297, "holdover_h": 0.534, "safe_h": 8.832, "events": [], "t_ms": 25670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.6772, "aut_a_h": 8.131, "holdover_h": 0.534, "safe_h": 8.665, "events": [], "t_ms": 26670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.6633, "aut_a_h": 7.964, "holdover_h": 0.534, "safe_h": 8.498, "events": [], "t_ms": 27670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.6494, "aut_a_h": 7.797, "holdover_h": 0.534, "safe_h": 8.332, "events": [], "t_ms": 28670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.6355, "aut_a_h": 7.631, "holdover_h": 0.534, "safe_h": 8.165, "events": [], "t_ms": 29670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.6216, "aut_a_h": 7.464, "holdover_h": 0.534, "safe_h": 7.998, "events": [], "t_ms": 30670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.6078, "aut_a_h": 7.297, "holdover_h": 0.534, "safe_h": 7.832, "events": [], "t_ms": 31670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.5939, "aut_a_h": 7.131, "holdover_h": 0.534, "safe_h": 7.665, "events": [], "t_ms": 32670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.58, "aut_a_h": 6.964, "holdover_h": 0.534, "safe_h": 7.498, "events": [], "t_ms": 33670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.5661, "aut_a_h": 6.797, "holdover_h": 0.534, "safe_h": 7.332, "events": [], "t_ms": 34670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.5522, "aut_a_h": 6.631, "holdover_h": 0.534, "safe_h": 7.165, "events": [], "t_ms": 35670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.5383, "aut_a_h": 6.464, "holdover_h": 0.534, "safe_h": 6.998, "events": [], "t_ms": 36670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.5245, "aut_a_h": 6.297, "holdover_h": 0.534, "safe_h": 6.832, "events": [], "t_ms": 37670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.5106, "aut_a_h": 6.131, "holdover_h": 0.534, "safe_h": 6.665, "events": [], "t_ms": 38670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.4967, "aut_a_h": 5.964, "holdover_h": 0.534, "safe_h": 6.498, "events": [], "t_ms": 39670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.4828, "aut_a_h": 5.797, "holdover_h": 0.534, "safe_h": 6.332, "events": [], "t_ms": 40670, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.4689, "aut_a_h": 5.631, "holdover_h": 0.534, "safe_h": 6.165, "events": [], "t_ms": 41671, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.4551, "aut_a_h": 5.464, "holdover_h": 0.534, "safe_h": 5.998, "events": [], "t_ms": 42671, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.4412, "aut_a_h": 5.297, "holdover_h": 0.534, "safe_h": 5.831, "events": [], "t_ms": 43672, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.4273, "aut_a_h": 5.13, "holdover_h": 0.534, "safe_h": 5.665, "events": [], "t_ms": 44672, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.4134, "aut_a_h": 4.964, "holdover_h": 0.534, "safe_h": 5.498, "events": [], "t_ms": 45673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.3995, "aut_a_h": 4.797, "holdover_h": 0.534, "safe_h": 5.331, "events": [], "t_ms": 46673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.3856, "aut_a_h": 4.63, "holdover_h": 0.534, "safe_h": 5.164, "events": [], "t_ms": 47673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.3717, "aut_a_h": 4.464, "holdover_h": 0.534, "safe_h": 4.998, "events": [], "t_ms": 48673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.3579, "aut_a_h": 4.297, "holdover_h": 0.534, "safe_h": 4.831, "events": [], "t_ms": 49673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.344, "aut_a_h": 4.13, "holdover_h": 0.534, "safe_h": 4.664, "events": [], "t_ms": 50673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.3301, "aut_a_h": 3.964, "holdover_h": 0.534, "safe_h": 4.498, "events": [], "t_ms": 51673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.3162, "aut_a_h": 3.797, "holdover_h": 0.534, "safe_h": 4.331, "events": [], "t_ms": 52673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.3023, "aut_a_h": 3.63, "holdover_h": 0.534, "safe_h": 4.164, "events": [], "t_ms": 53673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.2885, "aut_a_h": 3.464, "holdover_h": 0.534, "safe_h": 3.998, "events": [], "t_ms": 54673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.2746, "aut_a_h": 3.297, "holdover_h": 0.534, "safe_h": 3.831, "events": [], "t_ms": 55673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.2607, "aut_a_h": 3.13, "holdover_h": 0.534, "safe_h": 3.664, "events": [], "t_ms": 56673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.2468, "aut_a_h": 2.964, "holdover_h": 0.534, "safe_h": 3.498, "events": [], "t_ms": 57673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.2329, "aut_a_h": 2.797, "holdover_h": 0.534, "safe_h": 3.331, "events": [], "t_ms": 58673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.2191, "aut_a_h": 2.63, "holdover_h": 0.534, "safe_h": 3.164, "events": [], "t_ms": 59673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.2052, "aut_a_h": 2.464, "holdover_h": 0.534, "safe_h": 2.998, "events": [], "t_ms": 60673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.1913, "aut_a_h": 2.297, "holdover_h": 0.534, "safe_h": 2.831, "events": [], "t_ms": 61673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.1774, "aut_a_h": 2.13, "holdover_h": 0.534, "safe_h": 2.664, "events": [], "t_ms": 62673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.1635, "aut_a_h": 1.964, "holdover_h": 0.534, "safe_h": 2.498, "events": [], "t_ms": 63673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.1497, "aut_a_h": 1.797, "holdover_h": 0.534, "safe_h": 2.331, "events": [], "t_ms": 64673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.1358, "aut_a_h": 1.63, "holdover_h": 0.534, "safe_h": 2.164, "events": [], "t_ms": 65673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.1219, "aut_a_h": 1.464, "holdover_h": 0.534, "safe_h": 1.998, "events": [], "t_ms": 66673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.108, "aut_a_h": 1.297, "holdover_h": 0.534, "safe_h": 1.831, "events": [], "t_ms": 67673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0941, "aut_a_h": 1.13, "holdover_h": 0.534, "safe_h": 1.664, "events": [], "t_ms": 68673, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0802, "aut_a_h": 0.963, "holdover_h": 0.534, "safe_h": 1.498, "events": [], "t_ms": 69674, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0663, "aut_a_h": 0.797, "holdover_h": 0.534, "safe_h": 1.331, "events": [], "t_ms": 70675, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0525, "aut_a_h": 0.63, "holdover_h": 0.534, "safe_h": 1.164, "events": [], "t_ms": 71675, "mode": "AHORRO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0386, "aut_a_h": 0.463, "holdover_h": 0.534, "safe_h": 0.997, "events": ["critical"], "t_ms": 72676, "mode": "CRITICO"}
+{"cmd":"GRID1"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0247, "aut_a_h": 0.296, "holdover_h": 0.534, "safe_h": 0.83, "events": [], "t_ms": 73677, "mode": "CRITICO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0108, "aut_a_h": 0.13, "holdover_h": 0.534, "safe_h": 0.664, "events": [], "t_ms": 74677, "mode": "CRITICO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0, "aut_a_h": 0.0, "holdover_h": 0.534, "safe_h": 0.534, "events": [], "t_ms": 75677, "mode": "CRITICO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0, "aut_a_h": 0.0, "holdover_h": 0.534, "safe_h": 0.534, "events": [], "t_ms": 76678, "mode": "CRITICO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": false, "soc": 0.0, "aut_a_h": 0.0, "holdover_h": 0.534, "safe_h": 0.534, "events": [], "t_ms": 77678, "mode": "CRITICO"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.0, "aut_a_h": 0.0, "holdover_h": 0.534, "safe_h": 0.534, "events": [], "t_ms": 78679, "mode": "RESTAURACION"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.0, "aut_a_h": 0.0, "holdover_h": 0.534, "safe_h": 0.534, "events": [], "t_ms": 79680, "mode": "RESTAURACION"}
+{"relay_a": true, "k": 600, "relay_c": false, "relay_b": true, "soc": 0.0, "aut_a_h": 0.0, "holdover_h": 0.534, "safe_h": 0.534, "events": [], "t_ms": 80681, "mode": "RESTAURACION"}
+{"relay_a": true, "k": 600, "relay_c": true, "relay_b": true, "soc": 1.0, "aut_a_h": 12.007, "holdover_h": 0.534, "safe_h": 12.541, "events": [], "t_ms": 81681, "mode": "NORMAL"
