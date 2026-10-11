@@ -109,7 +109,7 @@
       "id": "btn_outage",
       "top": -105.8,
       "left": -240,
-      "attrs": { "color": "red", "label": "CORTE", "bounce": "0", "key": "G" }
+      "attrs": { "color": "red", "label": "CORTE manual", "bounce": "0", "key": "G" }
     }
   ],
   "connections": [

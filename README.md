@@ -50,9 +50,12 @@ falla si divergen.
 1. Crea un proyecto **MicroPython ESP32** en [wokwi.com](https://wokwi.com).
 2. Copia al proyecto: `diagram.json`, `main.py`, `config.py`, `policy.py`, `ssd1306.py`.
 3. Pulsa Start. En la OLED deberías ver `NORMAL`, SoC, B/C y el badge `SIM x1`.
-4. Demo manual:
+4. Demo manual (paso a paso en `docs/DEMO_CHECKLIST.md`):
    - Interruptor deslizante (GPIO34): izquierda = hay red; derecha = corte.
-   - Pulsador rojo **CORTE** (GPIO14): atajo para simular caída de red.
+     **Es el control que se usa en el video.**
+   - Pulsador rojo **CORTE manual** (GPIO14) o tecla `G`: atajo para simular la
+     caída de red. **Solo manual**: el escenario de CI no lo usa, provoca el corte
+     por serie con `GRID0` / `GRID1`.
    - Pulsador azul **SIM k** (GPIO13) o tecla `K`: cicla `k` en 1 → 60 → 600.
    - Potenciómetro (GPIO35): potencia de A (0–20 W); ~40 % ≈ 8 W.
 5. El monitor serie imprime JSON cada segundo (`t_ms`, `k`, `mode`, `soc`, relés, etc.).

@@ -33,10 +33,9 @@ steps:
   - delay: 500ms
 
   # --- CORTE: C se abre (sala de espera sin energía); B sigue cerrado ---
-  - set-control:
-      part-id: btn_outage
-      control: pressed
-      value: 1
+  # El corte se provoca por serie (GRID0), no con el pulsador: el pulsador es
+  # solo para la demo manual (docs/DEMO_CHECKLIST.md).
+  - write-serial: "GRID0\r\n"
   - wait-serial: '"mode": "CORTE"'
   - expect-pin:
       part-id: esp
@@ -74,10 +73,7 @@ steps:
 
   # --- Restauración: vuelve la red; primero cierra B y luego C ---
   - delay: 500ms
-  - set-control:
-      part-id: btn_outage
-      control: pressed
-      value: 0
+  - write-serial: "GRID1\r\n"
   - wait-serial: '"mode": "RESTAURACION"'
   - wait-serial: '"mode": "NORMAL"'
   - expect-pin:
