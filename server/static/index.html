@@ -382,17 +382,34 @@ function pintarTabla(eventos) {
   }).join("");
 }
 
-let ultimoOk = 0, ultimoId = null, fallosSeguidos = 0;
+let ultimoOk = 0, ultimaNovedad = 0, ultimaClave = null, fallosSeguidos = 0;
+
+/* Dos frescuras distintas:
+   - la ingesta responde (ultimoOk): si no, esta caida o inalcanzable;
+   - llega un estado NUEVO (ultimaNovedad): si no, el firmware o el puente se
+     pararon aunque el servidor siga vivo (el caso que mas engana: el panel se
+     queda congelado en el ultimo modo sin avisar). */
+function clave(ev) {
+  return ev ? ev.id + ":" + ev.ts_server + ":" + ev.t_ms : null;
+}
 
 function revisarFrescura() {
   const aviso = $("aviso");
   if (!ultimoOk) return;
-  const edad = Date.now() - ultimoOk;
-  if (edad > STALE_MS) {
+  const ahora = Date.now();
+  const edadFetch = ahora - ultimoOk;
+  const edadNuevo = ultimaClave ? ahora - ultimaNovedad : 0;
+
+  if (edadFetch > STALE_MS) {
     aviso.hidden = false;
-    aviso.textContent = "Sin datos desde hace " + Math.round(edad / 1000) +
-      " s (última ingesta correcta: " + new Date(ultimoOk).toLocaleTimeString() +
-      "). ¿Sigue vivo el firmware y el puente?";
+    aviso.textContent = "La ingesta no responde desde hace " + Math.round(edadFetch / 1000) +
+      " s (última respuesta correcta: " + new Date(ultimoOk).toLocaleTimeString() +
+      "). ¿Sigue vivo el servidor?";
+  } else if (edadNuevo > STALE_MS) {
+    aviso.hidden = false;
+    aviso.textContent = "Sin estados nuevos desde hace " + Math.round(edadNuevo / 1000) +
+      " s (el último es de las " + new Date(ultimaNovedad).toLocaleTimeString() +
+      "). El servidor responde: ¿siguen vivos el firmware y el puente?";
   } else {
     aviso.hidden = true;
   }
@@ -409,7 +426,13 @@ async function refrescar() {
     const datos = await pedir("/api/events?limit=50");
     ultimoOk = Date.now();
     fallosSeguidos = 0;
-    pintar(datos.events.length ? datos.events[datos.events.length - 1] : null);
+    const nuevo = datos.events.length ? datos.events[datos.events.length - 1] : null;
+    const k = clave(nuevo);
+    if (k !== ultimaClave) {           // llego un estado que no habiamos visto
+      ultimaClave = k;
+      ultimaNovedad = Date.now();
+    }
+    pintar(nuevo);
     pintarTabla(datos.events);
     $("cap-eventos").textContent = (datos.events.length || 0) === 0
       ? "Sin datos todavía (0 de 5000 eventos guardados)."
