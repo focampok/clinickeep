@@ -1,0 +1,6 @@
+# Base SQLite en tiempo de ejecucion (incluye los -wal/-shm de WAL).
+data/
+*.db
+*.db-wal
+*.db-shm
+__pycache__/
