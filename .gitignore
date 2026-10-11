@@ -2,3 +2,11 @@
 __pycache__/
 .pytest_cache/
 out/
+
+# Secretos y base de datos local del servicio de ingesta (Fase 3).
+# No subas nunca un token real: usa server/.env.example como plantilla.
+.env
+*.db
+*.db-wal
+*.db-shm
+data/
