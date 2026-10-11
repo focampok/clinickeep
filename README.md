@@ -17,6 +17,11 @@ y el motor de escenarios usan exactamente el mismo código.
 | `tests/test_scenarios.py` | Validación contra fórmula cerrada y monotonía |
 | `tests/test_sync.py` | `wokwi/policy.py` y `config.py` idénticos a la raíz |
 | `PROMPT_correcciones.md` | Prompt para el agente: 4 correcciones de la Fase 1 |
+| `tools/gen_pinout.py` | Genera `docs/PINOUT.md` y `docs/SCHEMA.md` desde el diagrama |
+| `docs/PINOUT.md` | Pinout GPIO ↔ señal (generado; no editar a mano) |
+| `docs/SCHEMA.md` | Esquema del circuito en texto + enlace al proyecto Cirkit |
+| `docs/RELAY_CHECK.md` | Polaridad de los relés y estado seguro (medido en simulador) |
+| `docs/DEMO_CHECKLIST.md` | Pasos de la demo manual (qué mover y qué debe verse) |
 
 ## Cómo correrlo en Linux
 
@@ -44,6 +49,15 @@ El proyecto está en `wokwi/` (ESP32 DevKit C V4 + MicroPython). `config.py` y
 `policy.py` son **copias de la raíz**: no se editan en `wokwi/`. `build_firmware.py`
 las copia antes de empaquetar (con `--sync-only` solo sincroniza), y `tests/test_sync.py`
 falla si divergen.
+
+Pinout: `docs/PINOUT.md`. Esquema del circuito: `docs/SCHEMA.md`. Polaridad de los
+relés: `docs/RELAY_CHECK.md`. Demo manual paso a paso: `docs/DEMO_CHECKLIST.md`.
+
+**El INA219 es hardware FUTURO.** Wokwi no tiene ese componente: en la simulación la
+potencia de la zona A se **emula con un potenciómetro** (GPIO35), siempre detrás de la
+capa de abstracción (`read_power_a_w()`). El sensor real va en el bus I²C compartido con
+la OLED (dirección 0x40) y en serie con la carga de A; al integrarlo se reemplaza solo
+esa función y la política no se toca.
 
 ### En wokwi.com (importar)
 
