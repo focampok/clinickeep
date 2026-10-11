@@ -30,10 +30,21 @@ P_A_MAX_W = 20.0
 LOOP_MS = 500
 JSON_EVERY_MS = 1000
 K_CYCLE = (1, 60, 600)
+BOOT_GUARD_MS = 2000   # ventana de arranque seguro (reles abiertos; ver al final)
 
-# 1. Reles ABIERTOS antes de cualquier otra cosa (transistor pnp: IN bajo = NO abierto)
-relay_b = Pin(PIN_RELAY_B, Pin.OUT, value=0)
-relay_c = Pin(PIN_RELAY_C, Pin.OUT, value=0)
+# --- Polaridad de los reles: UNICA fuente de verdad ---
+# El atributo `transistor` de wokwi-relay-module invierte la entrada. Medido en el
+# simulador (evidencia en docs/RELAY_CHECK.md):
+#   "pnp" -> IN BAJO energiza la bobina (contacto COM-NO cerrado = carga CON energia)
+#   "npn" -> IN ALTO energiza la bobina
+# Debe coincidir con diagram.json: si cambias el transistor, cambia SOLO esta linea.
+RELAY_ACTIVE_LEVEL = 0                       # nivel que CIERRA (energiza) el rele
+RELAY_OPEN_LEVEL = 1 - RELAY_ACTIVE_LEVEL    # nivel SEGURO: carga sin energia
+
+# 1. Reles ABIERTOS antes de cualquier otra cosa: las cargas no criticas no se
+#    energizan hasta que la politica tome su primera decision.
+relay_b = Pin(PIN_RELAY_B, Pin.OUT, value=RELAY_OPEN_LEVEL)
+relay_c = Pin(PIN_RELAY_C, Pin.OUT, value=RELAY_OPEN_LEVEL)
 
 # 2. Watchdog
 wdt = WDT(timeout=8000)
@@ -165,8 +176,8 @@ def update_temp():
 
 
 def apply_outputs(out):
-    relay_b.value(1 if out["relay_b"] else 0)
-    relay_c.value(1 if out["relay_c"] else 0)
+    relay_b.value(RELAY_ACTIVE_LEVEL if out["relay_b"] else RELAY_OPEN_LEVEL)
+    relay_c.value(RELAY_ACTIVE_LEVEL if out["relay_c"] else RELAY_OPEN_LEVEL)
     if out["alarm"]:
         buzzer.duty(512)
     else:
@@ -228,7 +239,15 @@ def poll_k_button():
     _btn_prev = v
 
 
+# Ventana de arranque seguro: B y C quedan en el nivel ABIERTO hasta la primera
+# decision de la politica. Evita energizar cargas no criticas antes de tener
+# lecturas validas y permite al CI comprobar el estado seguro con expect-pin.
 print('{"boot":"clinickeep","relays":"open"}')
+_t_boot = ticks_ms()
+while ticks_diff(ticks_ms(), _t_boot) < BOOT_GUARD_MS:
+    wdt.feed()
+    sleep_ms(50)
+print('{"boot_ready":true}')
 
 while True:
     wdt.feed()

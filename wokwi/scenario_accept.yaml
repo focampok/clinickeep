@@ -1,19 +1,78 @@
 name: ClinicKeep acceptance
 version: 1
 author: ClinicKeep
+# Nivel del pin de relé (transistor pnp, ver docs/RELAY_CHECK.md):
+#   1 = ABIERTO (carga no crítica SIN energía)  <- nivel seguro
+#   0 = CERRADO (carga CON energía)             <- nivel activo
+# Se asertan los GPIO (26 = B, 27 = C): son salidas manejadas por el firmware,
+# por eso son deterministas. El nodo de salida del relé (COM-NO) queda flotante
+# cuando el contacto está abierto y Wokwi lo reporta como "undefinedV": no sirve
+# como objetivo de aserción.
 steps:
+  # --- Arranque seguro: B y C abiertos antes de la primera decisión ---
+  - wait-serial: '"relays":"open"'
+  - expect-pin:
+      part-id: esp
+      pin: 26
+      value: 1
+  - expect-pin:
+      part-id: esp
+      pin: 27
+      value: 1
+
+  # --- Con red: B y C cerrados, modo NORMAL ---
   - wait-serial: '"mode": "NORMAL"'
+  - expect-pin:
+      part-id: esp
+      pin: 26
+      value: 0
+  - expect-pin:
+      part-id: esp
+      pin: 27
+      value: 0
   - delay: 500ms
+
+  # --- CORTE: C se abre (sala de espera sin energía); B sigue cerrado ---
   - set-control:
       part-id: btn_outage
       control: pressed
       value: 1
   - wait-serial: '"mode": "CORTE"'
+  - expect-pin:
+      part-id: esp
+      pin: 27
+      value: 1
+  - expect-pin:
+      part-id: esp
+      pin: 26
+      value: 0
+
+  # --- AHORRO: B se abre también (ninguna carga no crítica con energía) ---
   - delay: 200ms
   - write-serial: "K=600\r\n"
   - wait-serial: '"k": 600'
   - wait-serial: '"mode": "AHORRO"'
+  - expect-pin:
+      part-id: esp
+      pin: 26
+      value: 1
+  - expect-pin:
+      part-id: esp
+      pin: 27
+      value: 1
+
+  # --- CRITICO: alarma; las cargas no críticas siguen sin energía ---
   - wait-serial: '"mode": "CRITICO"'
+  - expect-pin:
+      part-id: esp
+      pin: 26
+      value: 1
+  - expect-pin:
+      part-id: esp
+      pin: 27
+      value: 1
+
+  # --- Restauración: vuelve la red; primero cierra B y luego C ---
   - delay: 500ms
   - set-control:
       part-id: btn_outage
@@ -21,3 +80,11 @@ steps:
       value: 0
   - wait-serial: '"mode": "RESTAURACION"'
   - wait-serial: '"mode": "NORMAL"'
+  - expect-pin:
+      part-id: esp
+      pin: 26
+      value: 0
+  - expect-pin:
+      part-id: esp
+      pin: 27
+      value: 0
