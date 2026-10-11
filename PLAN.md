@@ -65,7 +65,7 @@
         ▼
 [Railway: API de ingesta + dashboard público de solo lectura (SSE) + calculadora estática]
         ▲
-[Motor de escenarios (TypeScript o Python)]  ← mismo algoritmo de política que el firmware
+[Motor de escenarios (Python, reutiliza policy.py)]  ← mismo algoritmo de política que el firmware
         │  genera mapas de calor y gráficos de la hipótesis
 
 (Hoja de ruta, no simulado)  ESP32 --LoRaWAN--> gateway compartido --> supervisor distrital
@@ -82,7 +82,7 @@
 
 | Pieza real (futura) | Pieza en Wokwi | Nota |
 |---|---|---|
-| ESP32 | ESP32 DevKit | Firmware Arduino (C++) |
+| ESP32 | ESP32 DevKit C v4 | Firmware MicroPython (mismo `policy.py`/`config.py` que el motor de escenarios y el servidor) |
 | Detección de red (divisor al ADC) | Interruptor deslizable o potenciómetro en GPIO 34 | ADC1, no ADC2 |
 | INA219 (potencia de A y total) | Potenciómetro | El INA219 no aparece en la lista de partes de Wokwi; se emula tras la capa de abstracción |
 | DS18B20 (caja y ambiente) | DS18B20 | Temperatura ajustable desde la interfaz |
@@ -102,6 +102,8 @@ void  setRelay(char zone, bool on);
 Con esto, pasar a hardware real cambia solo estas funciones.
 
 ---
+
+**Diagramas para la entrega:** la simulación vive solo en Wokwi (`wokwi/diagram.json`). La imagen del hardware real (protoboard y esquemático) se hace en Cirkit Designer, sin simulación, con el INA219 en lugar del potenciómetro (I2C compartido con la OLED: SDA GPIO21, SCL GPIO22, dirección 0x40; VIN+/VIN− en serie con la carga de Zona A, puntos A3/A4 de la protoboard). Proyecto: https://app.cirkitdesigner.com/project/4e224752-621d-45eb-b841-17e5f0f924d7. Exportar imágenes a `docs/hardware/` y enlazar Wokwi ("probar la simulación") y Cirkit ("ver el hardware") en el README.
 
 ## 5. Firmware y política
 
@@ -143,7 +145,7 @@ Con esto, pasar a hardware real cambia solo estas funciones.
 - Usa el agente para editar el proyecto (sketch y definición del circuito), compilar y ejecutar casos, según las herramientas que exponga tu MCP. Revisa su lista de capacidades antes de depender de ellas.
 - Define **casos canónicos** (sección 8) con entradas y salidas esperadas por puerto serie. Si tu entorno admite escenarios automatizados de Wokwi (en su CLI), úsalos como pruebas de regresión; verifica límites y precios del plan gratuito, porque parte de la integración con CI estaba en beta.
 - Guarda **logs de cada corrida** (serie con marcas de tiempo) en `evidence/`.
-- Para el barrido de escenarios usa el motor de escenarios (TypeScript/Python), no cientos de ejecuciones del simulador.
+- Para el barrido de escenarios usa el motor de escenarios en Python (importa `policy.py`), no cientos de ejecuciones del simulador.
 - Verifica en los términos de Wokwi que el uso en un hackatón sea aceptable.
 
 ---
