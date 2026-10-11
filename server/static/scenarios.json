@@ -1,0 +1,31 @@
+{
+  "generado": "2026-10-11T21:19:29+00:00",
+  "simulado": true,
+  "supuestos": "Supuestos (NO medidos): A=8 W, B+C repartidos 57/43; ambiente 25 C; holdover 0.53 h (tau=4.0 h, T_HI=5.0, T_LIM=7.5); eficiencia de carga 0.85; T_RESERVA = duracion del corte",
+  "escenarios": [
+    {
+      "id": "s2a_mejora",
+      "titulo": "S2a - Cuanto ayuda priorizar la nevera",
+      "nota": "Mejora del tiempo protegido frente a no hacer nada, segun bateria y % de carga no critica (corte de 12 h).",
+      "png": "static/img/s2a_mejora.png",
+      "csv": "static/csv/s2a_mejora.csv",
+      "filas": 408
+    },
+    {
+      "id": "s2b_cobertura",
+      "titulo": "S2b - La nevera aguanta todo el corte?",
+      "nota": "Si el tiempo protegido cubre la duracion del corte, segun bateria y duracion.",
+      "png": "static/img/s2b_cobertura.png",
+      "csv": "static/csv/s2b_cobertura.csv",
+      "filas": 312
+    },
+    {
+      "id": "s3_recarga",
+      "titulo": "S3 - Alcanza a recargarse entre cortes?",
+      "nota": "Estado tras un corte diario segun cargador y duracion del corte (eficiencia 0.85).",
+      "png": "static/img/s3_recarga.png",
+      "csv": "static/csv/s3_recarga.csv",
+      "filas": 156
+    }
+  ]
+}

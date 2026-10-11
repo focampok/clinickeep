@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClinicKeep - dashboard (datos simulados)</title>
+<style>
+  /* Tema claro por defecto; oscuro con prefers-color-scheme. Contraste AA:
+     texto normal >= 4.5:1 sobre su fondo en ambos temas. */
+  :root {
+    --bg: #ffffff;
+    --panel: #f1f4f8;
+    --panel-2: #e6ebf2;
+    --line: #b9c4d0;
+    --text: #131c26;
+    --muted: #4a5a6b;
+    --accent: #0b5fa5;
+    --ok: #14631f;
+    --warn: #6d4400;
+    --danger: #9c1414;
+    --unknown: #4a5a6b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1419;
+      --panel: #1b232c;
+      --panel-2: #232d38;
+      --line: #5a6a7a;
+      --text: #e9eff5;
+      --muted: #adbccb;
+      --accent: #7ab8f5;
+      --ok: #86e39a;
+      --warn: #ffd479;
+      --danger: #ff9c9c;
+      --unknown: #adbccb;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .skip {
+    position: absolute; left: -999rem; top: 0; background: var(--panel);
+    color: var(--text); padding: .6rem 1rem; z-index: 20;
+  }
+  .skip:focus { left: 0; }
+
+  header { padding: 1rem 1rem .5rem; }
+  header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .01em; }
+  header .sub { margin: .15rem 0 .6rem; color: var(--muted); font-size: .9rem; }
+
+  /* Banner permanente de datos simulados: pegado arriba, no se cierra. */
+  .banner {
+    position: sticky; top: 0; z-index: 10;
+    margin: 0 0 1rem;
+    padding: .6rem 1rem;
+    background: var(--panel-2);
+    border-top: 3px solid var(--warn);
+    border-bottom: 1px solid var(--line);
+    color: var(--text);
+    font-weight: 700;
+    letter-spacing: .04em;
+    font-size: .85rem;
+  }
+  .banner span { font-weight: 400; color: var(--muted); letter-spacing: 0; }
+
+  nav.tabs { display: flex; gap: .35rem; padding: 0 1rem; flex-wrap: wrap; }
+  nav.tabs button {
+    font: inherit; font-weight: 600;
+    color: var(--text); background: var(--panel);
+    border: 1px solid var(--line); border-bottom: none;
+    border-radius: .5rem .5rem 0 0;
+    padding: .55rem .9rem; cursor: pointer;
+  }
+  nav.tabs button[aria-selected="true"] {
+    background: var(--panel-2);
+    border-bottom: 3px solid var(--accent);
+  }
+
+  main { padding: 0 1rem 2rem; }
+  .panel { border-top: 1px solid var(--line); padding-top: 1rem; }
+  .panel[hidden] { display: none; }
+  h2 { font-size: 1.05rem; margin: 1rem 0 .5rem; }
+  h2:first-child { margin-top: 0; }
+
+  .grid {
+    display: grid; gap: .75rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: .6rem; padding: .8rem .9rem; box-shadow: var(--shadow);
+  }
+  .card h3 {
+    margin: 0 0 .5rem; font-size: .78rem; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted); font-weight: 700;
+  }
+  .big { font-size: 1.6rem; font-weight: 700; margin: 0; }
+  .unit { font-size: .95rem; font-weight: 400; color: var(--muted); }
+  .note { margin: .5rem 0 0; font-size: .82rem; color: var(--muted); }
+
+  /* Modo: icono + texto + descripcion. Nunca solo color. */
+  .badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    border: 2px solid var(--line); border-left-width: 8px;
+    border-radius: .5rem; padding: .4rem .7rem;
+    font-weight: 700; font-size: 1.1rem; background: var(--bg);
+  }
+  .badge .ico { font-size: 1.2rem; line-height: 1; }
+  .modo-NORMAL       { border-color: var(--ok);     color: var(--ok); }
+  .modo-CORTE        { border-color: var(--warn);   color: var(--warn); border-left-style: dashed; }
+  .modo-AHORRO       { border-color: var(--accent); color: var(--accent); border-left-style: dotted; }
+  .modo-CRITICO      { border-color: var(--danger); color: var(--danger); border-left-style: double; border-left-width: 8px; }
+  .modo-RESTAURACION { border-color: var(--accent); color: var(--accent); border-left-style: solid; }
+  .modo-FALLO_SENSOR { border-color: var(--unknown); color: var(--unknown); border-left-style: dashed; }
+
+  /* Barras (bateria). El numero va siempre al lado: no depende del color. */
+  .meter { height: 1.1rem; background: var(--panel-2); border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; margin: .35rem 0; }
+  .meter i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--accent) 0 10px, color-mix(in srgb, var(--accent) 70%, var(--bg)) 10px 20px); }
+  .zones { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+  .zones li { display: flex; justify-content: space-between; gap: .5rem; border-bottom: 1px dotted var(--line); padding-bottom: .3rem; }
+  .zones b { font-variant-numeric: tabular-nums; }
+  .on { color: var(--ok); font-weight: 700; }
+  .off { color: var(--warn); font-weight: 700; }
+
+  .alert {
+    border: 2px solid var(--danger); color: var(--danger);
+    background: var(--panel); border-radius: .5rem;
+    padding: .6rem .8rem; margin: 0 0 .8rem; font-weight: 700;
+  }
+  .alert[hidden] { display: none; }
+
+  table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+  caption { text-align: left; color: var(--muted); font-size: .82rem; padding-bottom: .35rem; }
+  th, td { border-bottom: 1px solid var(--line); padding: .35rem .45rem; text-align: left; }
+  thead th { background: var(--panel-2); position: sticky; top: 0; }
+  .scroll { max-height: 26rem; overflow: auto; border: 1px solid var(--line); border-radius: .5rem; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .tag { display: inline-block; border: 1px solid var(--line); border-radius: .3rem; padding: 0 .3rem; font-size: .78rem; }
+
+  figure { margin: 0; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: .5rem; background: #fff; }
+  .btn {
+    font: inherit; font-weight: 600; color: var(--text); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: .4rem; padding: .4rem .7rem; cursor: pointer;
+  }
+  footer.pie {
+    margin-top: 1.5rem; padding-top: .8rem; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: .82rem;
+  }
+  .escenarios { display: grid; gap: 1.25rem; }
+  @media (max-width: 480px) {
+    header, nav.tabs, main { padding-left: .6rem; padding-right: .6rem; }
+    .big { font-size: 1.35rem; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header>
+  <h1>ClinicKeep - panel de la política de energía</h1>
+  <p class="sub">Ingesta HTTP del firmware (Wokwi / ESP32) y escenarios S2–S3.</p>
+</header>
+
+<p class="banner" role="note">DATOS SIMULADOS
+  <span>— todo lo que muestra este panel viene de la simulación, no de hardware real.</span>
+</p>
+
+<nav class="tabs" role="tablist" aria-label="Secciones del panel">
+  <button id="tab-estado" role="tab" aria-selected="true" aria-controls="panel-estado" tabindex="0">Estado</button>
+  <button id="tab-escenarios" role="tab" aria-selected="false" aria-controls="panel-escenarios" tabindex="-1">Escenarios</button>
+</nav>
+
+<main id="main">
+  <!-- ------------------------------------------------ Estado -->
+  <section id="panel-estado" class="panel" role="tabpanel" aria-labelledby="tab-estado" tabindex="0">
+    <p id="aviso" class="alert" role="alert" hidden></p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Modo de la política</h3>
+        <p><span id="modo-badge" class="badge modo-?"><span class="ico" aria-hidden="true">?</span><span id="modo-texto">sin datos</span></span></p>
+        <p id="modo-desc" class="note">Esperando la primera lectura de la ingesta…</p>
+        <p class="note mono" id="modo-extra"></p>
+      </div>
+
+      <div class="card">
+        <h3>Zonas</h3>
+        <ul class="zones">
+          <li><span>A · nevera de vacunas</span><b class="on" id="zona-a">sin relé: nunca se corta</b></li>
+          <li><span>B · luces de pasillo</span><b id="zona-b">—</b></li>
+          <li><span>C · sala de espera</span><b id="zona-c">—</b></li>
+        </ul>
+        <p class="note">En CORTE se abre solo C; B se abre en AHORRO, cuando la autonomía total baja de T_RESERVA_H.</p>
+      </div>
+
+      <div class="card">
+        <h3>Batería</h3>
+        <p class="big mono" id="soc-texto">— <span class="unit">de carga</span></p>
+        <div class="meter" role="meter" id="soc-meter" aria-label="Estado de carga de la batería" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <i id="soc-bar" style="width:0%"></i>
+        </div>
+        <p class="note">SoC reportado por el firmware (<code>soc</code>, 0–1).</p>
+      </div>
+
+      <div class="card">
+        <h3>Horas protegidas (tiempo seguro)</h3>
+        <p class="big mono" id="safe-texto">— <span class="unit">h</span></p>
+        <ul class="zones">
+          <li><span>Autonomía de A</span><b class="mono" id="auta-texto">—</b></li>
+          <li><span>+ Holdover térmico</span><b class="mono" id="holo-texto">—</b></li>
+        </ul>
+        <p class="note" id="safe-nota">Tiempo seguro = autonomía de A + holdover.</p>
+      </div>
+
+      <div class="card">
+        <h3>Temperatura</h3>
+        <p class="big" id="temp-texto">no disponible</p>
+        <p class="note">El firmware <strong>no emite</strong> la temperatura en el JSON de serie
+          (vive en <code>_last_temp</code>, solo entra a <code>policy.step()</code>).
+          Pendiente: añadir la clave a <code>emit_json()</code>. Ver <code>docs/INGEST_SCHEMA.md</code>.</p>
+      </div>
+
+      <div class="card">
+        <h3>Red y alarma</h3>
+        <ul class="zones">
+          <li><span>Red eléctrica</span><b id="red-texto">—</b></li>
+          <li><span>Alarma</span><b id="alarma-texto">—</b></li>
+          <li><span>Reloj SIM (k)</span><b class="mono" id="k-texto">—</b></li>
+        </ul>
+        <p class="note">Derivados del <code>mode</code>: hay red en NORMAL/RESTAURACION y la alarma
+          suena en CRITICO/FALLO_SENSOR (así los calcula <code>policy.py</code>). El firmware no
+          emite <code>grid_ok</code> ni <code>alarm</code> por serie.</p>
+      </div>
+    </div>
+
+    <h2>Línea de tiempo (últimos 50 estados)</h2>
+    <div class="scroll">
+      <table id="tabla-eventos">
+        <caption id="cap-eventos">Sin datos todavía.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Hora (servidor)</th>
+            <th scope="col">Modo</th>
+            <th scope="col">SoC</th>
+            <th scope="col">Tiempo seguro</th>
+            <th scope="col">B</th>
+            <th scope="col">C</th>
+            <th scope="col">Eventos de la política</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ Escenarios -->
+  <section id="panel-escenarios" class="panel" role="tabpanel" aria-labelledby="tab-escenarios" tabindex="0" hidden>
+    <h2>Escenarios S2–S3 (simulación, no datos medidos)</h2>
+    <div class="escenarios" id="lista-escenarios"></div>
+    <footer class="pie">
+      <p id="supuestos">Cargando supuestos…</p>
+      <p>Los mapas y CSV los publica <code>tools/publish_scenarios.py</code> a partir de
+        <code>out/</code>. Manifiesto: <a href="static/scenarios.json">static/scenarios.json</a>
+        · Esquema de ingesta: <code>docs/INGEST_SCHEMA.md</code>.</p>
+    </footer>
+  </section>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const MODOS = {
+  NORMAL:       { ico: "✓", desc: "Red presente. B y C con energía; A nunca se corta." },
+  CORTE:        { ico: "✕", desc: "Sin red. Se abre solo C; B sigue con energía." },
+  AHORRO:       { ico: "◐", desc: "Sin red y autonomía total bajo T_RESERVA_H: se abre B (shedding monótono)." },
+  CRITICO:      { ico: "!",       desc: "Sin red y tiempo seguro bajo el mínimo: alarma activa." },
+  RESTAURACION: { ico: "↻", desc: "Volvió la red: B cerrado; C se cierra tras el escalonado." },
+  FALLO_SENSOR: { ico: "⚠", desc: "Fallo del sensor de potencia con la red caída: B y C abiertos (conservador), A sigue." }
+};
+const POLL_MS = 2000;
+const STALE_MS = 10000;
+
+function fmtH(h, dec = 2) {
+  if (h === null || h === undefined) return "n/d";
+  if (h >= 999) return ">99 h";
+  return h.toFixed(dec) + " h";
+}
+function pct(x) { return x === null || x === undefined ? "—" : Math.round(x * 100) + "%"; }
+function hora(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleTimeString() + "." + String(d.getMilliseconds()).padStart(3, "0");
+}
+function onOff(v) {
+  return v ? '<span class="on">con energía</span>' : '<span class="off">sin energía</span>';
+}
+
+function pintarModo(ev) {
+  const m = ev && MODOS[ev.mode] ? ev.mode : null;
+  const badge = $("modo-badge");
+  if (!m) {
+    badge.className = "badge modo-?";
+    badge.querySelector(".ico").textContent = "?";
+    $("modo-texto").textContent = "sin datos";
+    $("modo-desc").textContent = "Esperando la primera lectura de la ingesta…";
+    $("modo-extra").textContent = "";
+    return;
+  }
+  badge.className = "badge modo-" + m;
+  badge.querySelector(".ico").textContent = MODOS[m].ico;
+  $("modo-texto").textContent = m;
+  $("modo-desc").textContent = MODOS[m].desc;
+  $("modo-extra").textContent = "t_ms " + ev.t_ms + " · k=" + ev.k + " · " + hora(ev.ts_server);
+}
+
+function pintar(ev) {
+  pintarModo(ev);
+  if (!ev) {
+    ["zona-b", "zona-c", "soc-texto", "safe-texto", "auta-texto", "holo-texto",
+     "red-texto", "alarma-texto", "k-texto"].forEach(id => { $(id).textContent = "—"; });
+    $("zona-b").className = ""; $("zona-c").className = "";
+    $("red-texto").className = ""; $("alarma-texto").className = "";
+    $("soc-bar").style.width = "0%";
+    $("soc-meter").setAttribute("aria-valuenow", "0");
+    return;
+  }
+  const zona = (el, v) => { el.innerHTML = onOff(v); el.className = ""; };
+  zona($("zona-b"), ev.relay_b);
+  zona($("zona-c"), ev.relay_c);
+
+  $("soc-texto").innerHTML = pct(ev.soc) + ' <span class="unit">de carga</span>';
+  $("soc-bar").style.width = Math.max(0, Math.min(1, ev.soc)) * 100 + "%";
+  const meter = $("soc-meter");
+  meter.setAttribute("aria-valuenow", String(Math.round(ev.soc * 100)));
+  meter.setAttribute("aria-valuetext", pct(ev.soc) + " de carga");
+
+  $("safe-texto").innerHTML = fmtH(ev.safe_h) + ' <span class="unit">protegidas</span>';
+  $("auta-texto").textContent = fmtH(ev.aut_a_h);
+  $("holo-texto").textContent = fmtH(ev.holdover_h);
+  $("safe-nota").textContent = (ev.holdover_h === null)
+    ? "Sin sensor de temperatura no hay holdover: el tiempo seguro es solo la batería."
+    : "Tiempo seguro = autonomía de A + holdover térmico.";
+
+  const red = (ev.mode === "NORMAL" || ev.mode === "RESTAURACION");
+  $("red-texto").innerHTML = red ? '<span class="on">hay red</span>' : '<span class="off">sin red</span>';
+  const alarma = (ev.mode === "CRITICO" || ev.mode === "FALLO_SENSOR");
+  $("alarma-texto").innerHTML = alarma
+    ? '<span class="off">activa</span>' : '<span class="on">en reposo</span>';
+  $("k-texto").textContent = "x" + ev.k;
+}
+
+function pintarTabla(eventos) {
+  const cuerpo = document.querySelector("#tabla-eventos tbody");
+  $("cap-eventos").textContent = eventos.length
+    ? eventos.length + " estados (más reciente primero)."
+    : "Sin datos todavía.";
+  cuerpo.innerHTML = eventos.slice().reverse().map(ev => {
+    const evs = (ev.events && ev.events.length)
+      ? ev.events.map(e => '<span class="tag">' + e + "</span>").join(" ")
+      : "—";
+    return "<tr>" +
+      '<td class="mono">' + hora(ev.ts_server) + "</td>" +
+      "<td>" + ev.mode + "</td>" +
+      '<td class="mono">' + pct(ev.soc) + "</td>" +
+      '<td class="mono">' + fmtH(ev.safe_h, 1) + "</td>" +
+      "<td>" + (ev.relay_b ? "cerrado" : "abierto") + "</td>" +
+      "<td>" + (ev.relay_c ? "cerrado" : "abierto") + "</td>" +
+      "<td>" + evs + "</td>" +
+      "</tr>";
+  }).join("");
+}
+
+let ultimoOk = 0, ultimoId = null, fallosSeguidos = 0;
+
+function revisarFrescura() {
+  const aviso = $("aviso");
+  if (!ultimoOk) return;
+  const edad = Date.now() - ultimoOk;
+  if (edad > STALE_MS) {
+    aviso.hidden = false;
+    aviso.textContent = "Sin datos desde hace " + Math.round(edad / 1000) +
+      " s (última ingesta correcta: " + new Date(ultimoOk).toLocaleTimeString() +
+      "). ¿Sigue vivo el firmware y el puente?";
+  } else {
+    aviso.hidden = true;
+  }
+}
+
+async function pedir(url) {
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) throw new Error(url + " -> HTTP " + r.status);
+  return r.json();
+}
+
+async function refrescar() {
+  try {
+    const datos = await pedir("/api/events?limit=50");
+    ultimoOk = Date.now();
+    fallosSeguidos = 0;
+    pintar(datos.events.length ? datos.events[datos.events.length - 1] : null);
+    pintarTabla(datos.events);
+    $("cap-eventos").textContent = (datos.events.length || 0) === 0
+      ? "Sin datos todavía (0 de 5000 eventos guardados)."
+      : datos.events.length + " de " + datos.count + " estados guardados (más reciente primero).";
+  } catch (e) {
+    fallosSeguidos++;
+    if (!ultimoOk) {
+      $("aviso").hidden = false;
+      $("aviso").textContent = "Todavía no llega ningún dato de la ingesta (" + e.message + ").";
+    } else {
+      revisarFrescura();
+    }
+  }
+}
+
+/* ---- Pestañas accesibles ---- */
+const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+function activarTab(btn, mover) {
+  tabs.forEach(t => {
+    const sel = t === btn;
+    t.setAttribute("aria-selected", sel ? "true" : "false");
+    t.tabIndex = sel ? 0 : -1;
+    document.getElementById(t.getAttribute("aria-controls")).hidden = !sel;
+  });
+  if (mover) btn.focus();
+  if (btn.id === "tab-escenarios") cargarEscenarios();
+}
+tabs.forEach((t, i) => {
+  t.addEventListener("click", () => activarTab(t, false));
+  t.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      const d = e.key === "ArrowRight" ? 1 : -1;
+      activarTab(tabs[(i + d + tabs.length) % tabs.length], true);
+    }
+  });
+});
+
+/* ---- Escenarios: PNG + CSV como tabla (se cargan al abrir la pestaña) ---- */
+let escenariosCargados = false;
+function parseCSV(texto) {
+  const filas = [];
+  let fila = [], campo = "", comillas = false;
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i];
+    if (comillas) {
+      if (c === '"') {
+        if (texto[i + 1] === '"') { campo += '"'; i++; } else { comillas = false; }
+      } else { campo += c; }
+    } else if (c === '"') { comillas = true; }
+    else if (c === ",") { fila.push(campo); campo = ""; }
+    else if (c === "\n") { fila.push(campo); filas.push(fila); fila = []; campo = ""; }
+    else if (c !== "\r") { campo += c; }
+  }
+  if (campo !== "" || fila.length) { fila.push(campo); filas.push(fila); }
+  return filas.filter(f => f.length > 1);
+}
+function tablaCSV(filas, tope) {
+  const head = filas[0], cuerpo = filas.slice(1);
+  const n = Math.min(cuerpo.length, tope);
+  let html = "<div class='scroll'><table><thead><tr>" +
+    head.map(h => '<th scope="col">' + h + "</th>").join("") + "</tr></thead><tbody>" +
+    cuerpo.slice(0, n).map(f => "<tr>" + f.map(v => '<td class="mono">' + v + "</td>").join("") + "</tr>").join("") +
+    "</tbody></table></div>";
+  if (cuerpo.length > n) {
+    html += "<p class='note'>Mostrando " + n + " de " + cuerpo.length +
+      " filas. El CSV completo está en el enlace de arriba.</p>";
+  }
+  return html;
+}
+async function cargarEscenarios() {
+  if (escenariosCargados) return;
+  try {
+    const man = await pedir("static/scenarios.json");
+    $("supuestos").textContent = man.supuestos;
+    $("lista-escenarios").innerHTML = man.escenarios.map((s, i) => (
+      "<article class='card'>" +
+        "<h3>" + s.titulo + "</h3>" +
+        "<figure><img src='" + s.png + "' alt='Mapa de calor del escenario " + s.id +
+          ": " + s.nota + "' loading='lazy'></figure>" +
+        "<p class='note'>" + s.nota + "</p>" +
+        "<p><button class='btn' type='button' aria-expanded='false' aria-controls='csv-" + s.id +
+          "' data-csv='" + s.csv + "' data-tabla='csv-" + s.id + "'>Ver tabla del CSV (" +
+          s.filas + " filas)</button> " +
+        "<a href='" + s.csv + "'>descargar CSV</a></p>" +
+        "<div id='csv-" + s.id + "' hidden></div>" +
+      "</article>"
+    )).join("");
+    document.querySelectorAll("button[data-csv]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const caja = document.getElementById(btn.dataset.tabla);
+        if (!caja.hidden) {
+          caja.hidden = true; btn.setAttribute("aria-expanded", "false");
+          btn.textContent = "Ver tabla del CSV";
+          return;
+        }
+        btn.disabled = true;
+        try {
+          const r = await fetch(btn.dataset.csv, { cache: "no-store" });
+          const filas = parseCSV(await r.text());
+          caja.innerHTML = tablaCSV(filas, 500);
+          caja.hidden = false;
+          btn.setAttribute("aria-expanded", "true");
+          btn.textContent = "Ocultar tabla";
+        } catch (e) {
+          caja.innerHTML = "<p class='note'>No se pudo leer el CSV: " + e.message + "</p>";
+          caja.hidden = false;
+        } finally { btn.disabled = false; }
+      });
+    });
+    escenariosCargados = true;
+  } catch (e) {
+    $("supuestos").textContent = "No se pudo cargar el manifiesto (static/scenarios.json): " + e.message;
+  }
+}
+
+/* Enlace directo a una pestaña: /#escenarios */
+function tabInicial() {
+  if (location.hash === "#escenarios") activarTab($("tab-escenarios"), false);
+  else if (location.hash === "#estado") activarTab($("tab-estado"), false);
+}
+tabInicial();
+window.addEventListener("hashchange", tabInicial);
+
+refrescar();
+setInterval(refrescar, POLL_MS);
+setInterval(revisarFrescura, 1000);
+</script>
+</body>
+</html>
