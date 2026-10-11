@@ -216,6 +216,15 @@ async def cors_propio(request: Request, call_next):
     return response
 
 
+def _errores(exc):
+    """Errores de Pydantic en JSON puro (ctx puede traer un ValueError crudo)."""
+    limpios = []
+    for err in exc.errors(include_url=False, include_input=False):
+        err.pop("ctx", None)
+        limpios.append(err)
+    return limpios
+
+
 def _check_auth(request: Request):
     """401 si falta el token o no coincide (comparacion en tiempo constante)."""
     expected = _ingest_token()
@@ -256,7 +265,7 @@ async def ingest(request: Request):
     try:
         state = State(**payload)
     except ValidationError as exc:
-        raise HTTPException(status_code=422, detail=exc.errors(include_url=False, include_input=False))
+        raise HTTPException(status_code=422, detail=_errores(exc))
 
     event_id = store_event(state)
     return JSONResponse(
