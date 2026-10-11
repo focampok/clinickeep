@@ -12,6 +12,11 @@ y el motor de escenarios usan exactamente el mismo código.
 | `policy.py` | Máquina de estados, reloj SIM, autonomía, holdover y tiempo seguro |
 | `tests/test_policy.py` | 14 pruebas de la política |
 | `demo.py` | Un corte simulado y comparación CON vs SIN ClinicKeep |
+| `scenarios.py` | Motor de escenarios S2a/S2b/S3 (usa la misma `policy.step`) -> CSV |
+| `plots.py` | Mapas de calor (matplotlib) |
+| `tests/test_scenarios.py` | Validación contra fórmula cerrada y monotonía |
+| `tests/test_sync.py` | `wokwi/policy.py` y `config.py` idénticos a la raíz |
+| `PROMPT_correcciones.md` | Prompt para el agente: 4 correcciones de la Fase 1 |
 
 ## Cómo correrlo en Linux
 
@@ -90,3 +95,9 @@ el beneficio baja. Ese barrido es el experimento S2 del plan.
   chequeo de recarga de la calculadora).
 - Los parámetros térmicos (`TAU_H`, límites) son supuestos; hay que tomarlos de la ficha
   técnica de una nevera de vacunas o declarar un rango.
+
+## Escenarios (supuestos, NO datos medidos)
+
+Análisis de sensibilidad, no predicción de cortes. S2a: mejora vs batería y % de carga no crítica (corte 12 h).
+S2b: qué cortes cubre la nevera. S3: recarga entre cortes (1 corte/día, eficiencia 0.85).
+Hallazgo honesto de S3: casi no depende de ClinicKeep (1 de 156 celdas); depende de duración del corte y del cargador.
