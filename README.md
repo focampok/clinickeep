@@ -40,8 +40,10 @@ python3 demo.py    # tabla del corte y comparación con/sin ClinicKeep
 
 ## Cómo correr en Wokwi
 
-El proyecto está en `wokwi/` (ESP32 DevKit C V4 + MicroPython). Incluye copias de
-`config.py` y `policy.py` (manténlas alineadas con la raíz del repo).
+El proyecto está en `wokwi/` (ESP32 DevKit C V4 + MicroPython). `config.py` y
+`policy.py` son **copias de la raíz**: no se editan en `wokwi/`. `build_firmware.py`
+las copia antes de empaquetar (con `--sync-only` solo sincroniza), y `tests/test_sync.py`
+falla si divergen.
 
 ### En wokwi.com (importar)
 
