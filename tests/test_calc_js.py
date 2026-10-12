@@ -203,3 +203,19 @@ def test_el_pie_es_el_que_dice_que_es_esto():
     pie = _export("PIE")
     assert "no es predicción de cortes ni datos medidos" in pie
     assert "sensibilidad" in pie
+
+
+def test_la_nota_del_forro_de_hielo_dice_lo_mismo_en_los_tres_sitios():
+    """Una nota fija copiada en tres archivos se desincroniza sola: se comparan.
+
+    La frase tiene que ser la misma en calc.js (de donde sale el resumen que se
+    copia), en la pagina de la calculadora y en el panel del servicio.
+    """
+    nota = _export("NOTA_HOLDOVER")
+    assert "sin forro de hielo (holdover corto)" in nota
+    assert "necesitan menos ayuda" in nota
+
+    with open(os.path.join(CALC, "index.html"), encoding="utf-8") as fh:
+        assert nota in fh.read(), "la calculadora no lleva la nota tal cual"
+    with open(os.path.join(RAIZ, "server", "static", "index.html"), encoding="utf-8") as fh:
+        assert nota in fh.read(), "el panel no lleva la nota tal cual"

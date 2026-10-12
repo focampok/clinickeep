@@ -89,6 +89,18 @@ def test_el_panel_enlaza_a_la_calculadora(cliente):
     assert 'href="/calc"' in cliente.get("/").text
 
 
+def test_el_panel_avisa_del_forro_de_hielo(cliente):
+    """La nota fija de alcance del holdover viaja con el panel (Fase 4b, punto 3).
+
+    La misma frase esta en calc/index.html y en calc.js: tests/test_calc_js.py
+    comprueba que las tres copias dicen lo mismo.
+    """
+    html = cliente.get("/").text
+    assert 'role="note"' in html
+    assert "sin forro de hielo (holdover corto)" in html
+    assert "necesitan menos ayuda" in html
+
+
 def test_cors_cerrado_por_defecto(cliente):
     """Sin ALLOWED_ORIGINS no se abre CORS, ni siquiera al propio host."""
     r = cliente.get("/api/latest", headers={"Origin": "http://ejemplo.invalido"})

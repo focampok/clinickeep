@@ -75,6 +75,13 @@ export const FUENTES = {
 export const PIE =
   "Análisis de sensibilidad con supuestos; no es predicción de cortes ni datos medidos";
 
+/* Nota fija de alcance, la misma en la calculadora y en el panel: el holdover de
+ * esta maqueta es el de una caja sin forro de hielo. Una nevera PQS con forro
+ * aguanta mucho mas sin energia, asi que estos numeros se quedan cortos con
+ * ella (que es lo conservador). */
+export const NOTA_HOLDOVER =
+  "Aplica a neveras sin forro de hielo (holdover corto). Las neveras PQS con forro de hielo tienen un holdover de horas a días y necesitan menos ayuda.";
+
 /* Valores por defecto de la calculadora (los del perfil didactico; los cambios
  * de cada perfil estan en PERFILES).
  *

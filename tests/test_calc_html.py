@@ -90,6 +90,17 @@ def test_las_fuentes_van_con_enlace_visible():
     assert "etiqueta--fuente" in PAGINA
 
 
+def test_la_nota_del_forro_de_hielo_esta_a_la_vista():
+    """El alcance del holdover, en la pagina y sin depender del modulo: se lee
+    aunque calc.js no llegue a cargar. El texto exacto lo compara con calc.js
+    tests/test_calc_js.py (que ve los dos archivos)."""
+    assert 'role="note"' in PAGINA
+    assert "sin forro de hielo (holdover corto)" in PAGINA
+    assert "horas a días y necesitan menos ayuda" in PAGINA
+    # Y no escondida: la nota va antes de las tarjetas de resultados.
+    assert PAGINA.index("nota-holdover") < PAGINA.index('id="tarjetas"')
+
+
 def test_no_depende_de_nada_de_fuera():
     """Sin CDN, sin fuentes de Google, sin framework: solo calc.js de al lado."""
     externos = re.findall(r'(?:src|href)\s*=\s*"(https?://[^"]+)"', PAGINA)

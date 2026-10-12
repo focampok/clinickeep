@@ -106,6 +106,12 @@
   .big { font-size: 1.6rem; font-weight: 700; margin: 0; }
   .unit { font-size: .95rem; font-weight: 400; color: var(--muted); }
   .note { margin: .5rem 0 0; font-size: .82rem; color: var(--muted); }
+  /* Nota fija de alcance del holdover: la misma frase que en la calculadora. */
+  .holdover {
+    margin: .5rem 0 0; padding: .5rem .6rem; font-size: .82rem; line-height: 1.4;
+    color: var(--muted); background: var(--panel); border-left: 3px solid var(--warn);
+    border-radius: .25rem;
+  }
 
   /* Modo: icono + texto + descripcion. Nunca solo color. */
   .badge {
@@ -230,6 +236,7 @@
           <li><span>+ Holdover térmico</span><b class="mono" id="holo-texto">—</b></li>
         </ul>
         <p class="note" id="safe-nota">Tiempo seguro = autonomía de A + holdover.</p>
+        <p class="holdover" id="nota-holdover" role="note">Aplica a neveras sin forro de hielo (holdover corto). Las neveras PQS con forro de hielo tienen un holdover de horas a días y necesitan menos ayuda.</p>
       </div>
 
       <div class="card">

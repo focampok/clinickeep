@@ -170,6 +170,14 @@
 
   #estado-copia { font-size: .82rem; color: var(--muted); margin: .5rem 0 0; min-height: 1.2em; }
 
+  /* Nota fija de alcance: el holdover de esta maqueta es el de una caja sin
+     forro de hielo. Se ve siempre, tambien sin JavaScript. */
+  .aviso-holdover {
+    margin: 0 0 .75rem; padding: .55rem .7rem; font-size: .85rem; line-height: 1.4;
+    background: var(--panel-2); border-left: 3px solid var(--warn); border-radius: .3rem;
+    max-width: 70ch;
+  }
+
   footer {
     padding: 1rem; border-top: 1px solid var(--line);
     background: var(--panel-2); color: var(--muted); font-size: .85rem;
@@ -231,6 +239,7 @@
 
   <section id="resultados" aria-live="polite" aria-labelledby="titulo-resultados">
     <h2 id="titulo-resultados">Resultados</h2>
+    <p class="aviso-holdover" role="note" id="nota-holdover">Aplica a neveras sin forro de hielo (holdover corto). Las neveras PQS con forro de hielo tienen un holdover de horas a días y necesitan menos ayuda.</p>
     <div class="grid" id="tarjetas"></div>
   </section>
   </div>
@@ -257,9 +266,9 @@ setTimeout(function () {
 </script>
 
 <script type="module">
-import { DEFAULTS, GRUPOS, MAX_H, ETIQUETAS, PIE, PERFILES, PERFIL_DEFECTO,
-         camposDePerfil, valoresDePerfil, energiaUtilWh, normalizarEntradas,
-         validarCoherencia, simular } from "./calc.js";
+import { DEFAULTS, GRUPOS, MAX_H, ETIQUETAS, PIE, NOTA_HOLDOVER, PERFILES,
+         PERFIL_DEFECTO, camposDePerfil, valoresDePerfil, energiaUtilWh,
+         normalizarEntradas, validarCoherencia, simular } from "./calc.js";
 
 // --- iconos: siempre acompañan a un texto, nunca lo sustituyen ---------------
 const SVG = (cuerpo) =>
@@ -559,6 +568,7 @@ function resumenTexto() {
   const linea = (t) => t + "\n";
   let s = "ClinicKeep - calculadora de dimensionamiento\n";
   s += PIE_TEXTO + "\n";
+  s += NOTA_HOLDOVER + "\n";
   s += "Perfil: " + PERFILES[perfilActivo].nombre + " (" + PERFILES[perfilActivo].etiqueta + ")\n\nENTRADAS\n";
   for (const clave of Object.keys(DEFAULTS)) {
     const meta = campos[clave];
