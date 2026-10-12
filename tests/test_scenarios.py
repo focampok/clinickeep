@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 
 import pytest
@@ -6,6 +7,8 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import scenarios as sc  # noqa: E402
+
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def closed_form_hours_a(e, a, b, d):
@@ -81,3 +84,58 @@ def test_csv_roundtrip(tmp_path):
     sc.write_csv(str(p), rows)
     assert p.read_text().splitlines()[0].startswith("d_h,")
     assert len(p.read_text().splitlines()) == 3
+
+
+# --- Perfiles (Fase 4b, punto 1) ---------------------------------------------
+# El perfil por defecto tiene que dejar todo como estaba: los tests de arriba y
+# el firmware no se enteran de que existen los perfiles.
+
+
+def test_sin_perfil_todo_sigue_igual():
+    assert sc.PERFIL_DEFECTO == "didactico"
+    assert (sc.A_W, sc.B_W, sc.C_W) == (8.0, 4.0, 3.0)
+    assert sc.B_SHARE == pytest.approx(4.0 / 7.0)
+    filas = sc.sweep_s2a(shares=[0.0])
+    assert min(r["e_wh"] for r in filas) == 24.0
+    assert max(r["e_wh"] for r in filas) == 300.0
+    # El perfil didactico tiene que seguir siendo el que se genera por defecto.
+    assert sc.PERFILES[sc.PERFIL_DEFECTO] is not sc.PERFILES["pqs_ref"]
+    assert sc._perfil(None).clave == "didactico"
+
+
+def test_el_perfil_pqs_es_la_nevera_e003_066():
+    p = sc.PERFILES["pqs_ref"]
+    assert p.a_w == 35.0                        # 0.85 kWh/24 h = 35.4 W de media
+    assert p.b_w == 25.0 and p.c_w == 20.0      # SUPUESTO por medir
+    assert (p.e_min, p.e_max) == (200.0, 2000.0)
+    assert "no representa una nevera PQS" in sc.PERFILES["didactico"].etiqueta
+
+
+def test_los_barridos_aceptan_un_perfil():
+    p = sc.PERFILES["pqs_ref"]
+    filas = sc.sweep_s2a(shares=[0.4], perfil=p)
+    assert {r["e_wh"] for r in filas} == set(p.energias())
+    # B es la parte b_share de la carga no critica (25 de 25+20 W).
+    assert filas[0]["b_w"] == pytest.approx(35.0 * 0.4 / 0.6 * p.b_share, abs=0.01)
+    # A carga las filas con las constantes del perfil, no con las del modulo.
+    assert sc.sweep_s2b(energies=[200.0], durations=[12], perfil=p)[0]["e_wh"] == 200.0
+    assert sc.sweep_s3(perfil=p)[0]["e_wh"] == p.e_default_wh
+
+
+def test_el_pie_dice_de_que_perfil_es():
+    assert "didáctico" in sc.assumptions_text()
+    assert "PQS" in sc.assumptions_text("pqs_ref")
+    assert "0.85 kWh" in sc.assumptions_text(sc.PERFILES["pqs_ref"])
+
+
+@pytest.mark.parametrize("perfil,carpeta", [("didactico", "out"), ("pqs_ref", "out/pqs_ref")])
+def test_el_cli_escribe_cada_perfil_en_su_carpeta(tmp_path, perfil, carpeta):
+    """Sin --out, el didactico va a out/ y el PQS a out/<perfil>/: no se pisan."""
+    res = subprocess.run([sys.executable, os.path.join(RAIZ, "scenarios.py"),
+                          "--perfil", perfil, "--no-plots"],
+                         cwd=tmp_path, capture_output=True, text=True)
+    assert res.returncode == 0, res.stdout + res.stderr
+    destino = tmp_path / carpeta
+    for nombre in ("s2a_mejora.csv", "s2b_cobertura.csv", "s3_recarga.csv"):
+        assert (destino / nombre).exists(), "falta %s" % nombre
+    assert sc.PERFILES[perfil].etiqueta.startswith(sc.assumptions_text(perfil).split(".")[0])

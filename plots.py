@@ -62,12 +62,17 @@ def _heat_continuous(rows, xkey, ykey, vkey):
     return xs, ys, grid
 
 
-def s2a(path, rows, assumptions):
+def _marca(perfil, subtitulo):
+    """El perfil va delante del subtitulo: cada mapa dice de que supuestos es."""
+    return ("Perfil %s — %s" % (perfil, subtitulo)) if perfil else subtitulo
+
+
+def s2a(path, rows, assumptions, perfil=None):
     xs, ys, grid = _heat_continuous(rows, "no_critica_pct", "e_wh", "mejora_pct")
     d = rows[0]["d_h"]
     fig, ax = _axes(
         "S2a - Cuánto ayuda priorizar la nevera (corte de %d h)" % d,
-        "Mejora en horas de cadena de frío protegida, con vs sin ClinicKeep",
+        _marca(perfil, "Mejora en horas de cadena de frío protegida, con vs sin ClinicKeep"),
         "Carga no crítica (B + C) como % de la carga total",
         "Batería útil (Wh)")
     fig.subplots_adjust(left=0.1, right=0.9, top=0.84, bottom=0.18)
@@ -86,11 +91,12 @@ def s2a(path, rows, assumptions):
     plt.close(fig)
 
 
-def _heat_states(path, rows, xkey, ykey, title, subtitle, xlabel, ylabel, labels, assumptions):
+def _heat_states(path, rows, xkey, ykey, title, subtitle, xlabel, ylabel, labels,
+                 assumptions, perfil=None):
     xs = _axis_values(rows, xkey)
     ys = _axis_values(rows, ykey)
     st = {(r[xkey], r[ykey]): r["estado"] for r in rows}
-    fig, ax = _axes(title, subtitle, xlabel, ylabel)
+    fig, ax = _axes(title, _marca(perfil, subtitle), xlabel, ylabel)
     fig.subplots_adjust(left=0.1, right=0.97, top=0.84, bottom=0.2)
     dx = xs[1] - xs[0]
     dy = ys[1] - ys[0]
@@ -113,17 +119,18 @@ def _heat_states(path, rows, xkey, ykey, title, subtitle, xlabel, ylabel, labels
     plt.close(fig)
 
 
-def make_all(out, s2a_rows, s2b_rows, s3_rows, assumptions):
-    s2a(os.path.join(out, "s2a_mejora.png"), s2a_rows, assumptions)
+def make_all(out, s2a_rows, s2b_rows, s3_rows, assumptions, perfil=None):
+    s2a(os.path.join(out, "s2a_mejora.png"), s2a_rows, assumptions, perfil)
     _heat_states(
         os.path.join(out, "s2b_cobertura.png"), s2b_rows, "d_h", "e_wh",
         "S2b - ¿La nevera aguanta todo el corte?",
         "Cobertura de A durante el corte, según duración y batería",
         "Duración del corte (h)", "Batería útil (Wh)",
-        ["No cubre", "Solo con ClinicKeep", "Cubre con y sin ClinicKeep"], assumptions)
+        ["No cubre", "Solo con ClinicKeep", "Cubre con y sin ClinicKeep"], assumptions, perfil)
     _heat_states(
         os.path.join(out, "s3_recarga.png"), s3_rows, "d_h", "cargador_w",
         "S3 - ¿Alcanza a recargarse entre cortes? (batería de %.0f Wh)" % s3_rows[0]["e_wh"],
         "Un corte al día; la red vuelve el resto del día. Si no recarga, hace falta solar o generador",
         "Duración del corte (h)", "Potencia del cargador (W)",
-        ["No recarga", "Recarga solo con ClinicKeep", "Recarga con y sin ClinicKeep"], assumptions)
+        ["No recarga", "Recarga solo con ClinicKeep", "Recarga con y sin ClinicKeep"],
+        assumptions, perfil)
