@@ -306,3 +306,77 @@ export function vidaBateriaAnios(ciclos, cortes_mes) {
   if (cortes_mes <= 0) return null;
   return ciclos / (cortes_mes * 12.0);
 }
+
+// ---------------------------------------------------------------------------
+// Salidas (punto 2): todo lo que responde la calculadora, de una sola pieza.
+// ---------------------------------------------------------------------------
+
+/* Calcula las salidas a partir de las entradas ya validadas (los numeros de
+ * `valoresPorDefecto()` con lo que haya puesto la persona en el formulario).
+ *
+ * Devuelve:
+ *   e_util_wh      bateria nominal x profundidad de descarga util
+ *   holdover_h     tiempo de gracia termico de la caja (MAX_H si no hay limite)
+ *   t_red_h        horas de red al dia (24 - duracion del corte)
+ *   sin / con      horas con energia en A, horas protegidas, energia usada del
+ *                  corte y si alcanza a recargarse
+ *   mejora_pct     cuanto alarga ClinicKeep el tiempo protegido
+ *   cobertura      estado 0/1/2 de S2b: cubre el corte?
+ *   recarga        estado 0/1/2 de S3 + energia que hay que reponer y la que da
+ *                  el cargador en las horas de red
+ *   bateria        ciclos al anio y vida estimada en anios
+ */
+export function simular(entradas) {
+  const e_util_wh = energiaUtilWh(entradas.nominal_wh, entradas.dod_pct);
+  const holdover_h = holdoverHoras(
+    entradas.tau_h, entradas.t_hi_c, entradas.t_lim_c, entradas.t_amb_c);
+  const t_red_h = 24.0 - entradas.d_h;
+
+  const horas_a_sin = horasA_sin(e_util_wh, entradas.a_w, entradas.b_w, entradas.c_w);
+  const horas_a_con = horasA_con(e_util_wh, entradas.a_w, entradas.b_w, entradas.d_h);
+  const prot_sin_h = horasProtegidas(horas_a_sin, holdover_h);
+  const prot_con_h = horasProtegidas(horas_a_con, holdover_h);
+
+  const e_usada_sin_wh = energiaUsada_sin(
+    e_util_wh, entradas.a_w, entradas.b_w, entradas.c_w, entradas.d_h);
+  const e_usada_con_wh = energiaUsada_con(
+    e_util_wh, entradas.a_w, entradas.b_w, entradas.d_h);
+
+  const ok_sin = recargaAlcanza(e_usada_sin_wh, entradas.eta, entradas.cargador_w, t_red_h);
+  const ok_con = recargaAlcanza(e_usada_con_wh, entradas.eta, entradas.cargador_w, t_red_h);
+
+  return {
+    e_util_wh: e_util_wh,
+    holdover_h: holdover_h,
+    t_red_h: t_red_h,
+
+    sin: {
+      horas_a_h: horas_a_sin,
+      protegidas_h: prot_sin_h,
+      e_usada_wh: e_usada_sin_wh,
+      e_repuesta_wh: e_usada_sin_wh / entradas.eta,   // lo que hay que meter en la bateria
+      recarga_ok: ok_sin,
+    },
+    con: {
+      horas_a_h: horas_a_con,
+      protegidas_h: prot_con_h,
+      e_usada_wh: e_usada_con_wh,
+      e_repuesta_wh: e_usada_con_wh / entradas.eta,
+      recarga_ok: ok_con,
+    },
+
+    mejora_pct: mejoraPct(prot_sin_h, prot_con_h),
+    cobertura: estadoCobertura(prot_sin_h, prot_con_h, entradas.d_h),
+    recarga: {
+      estado: estadoRecarga(ok_sin, ok_con),
+      ok_sin: ok_sin,
+      ok_con: ok_con,
+      disponible_wh: entradas.cargador_w * t_red_h,
+    },
+    bateria: {
+      ciclos: entradas.ciclos,
+      cortes_anio: entradas.cortes_mes * 12.0,
+      vida_anios: vidaBateriaAnios(entradas.ciclos, entradas.cortes_mes),
+    },
+  };
+}
