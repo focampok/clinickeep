@@ -31,91 +31,125 @@ export const GRUPOS = [
   { id: "termico", titulo: "Nevera (modelo termico)" },
 ];
 
+/* Etiquetas de honestidad. Cada valor por defecto dice de donde sale, y la
+ * pagina lo enseña al lado del campo (no escondido en un comentario):
+ *
+ *   SUPUESTO            el numero ya existe en el repo como supuesto de partida
+ *                       (scenarios.py o config.py) y `origen` lo señala
+ *   SUPUESTO POR CITAR  lo elige esta calculadora; no esta en ningun archivo del
+ *                       repo y no tiene fuente verificada. Esta listado, con lo
+ *                       que haria falta para citarlo, en docs/FUENTES_PENDIENTES.md
+ *
+ * No hay ninguna URL escrita a mano aqui: inventar una cita es peor que no
+ * tenerla. */
+export const ETIQUETAS = {
+  SUPUESTO: "SUPUESTO",
+  POR_CITAR: "SUPUESTO — por citar",
+};
+
+/* Texto fijo del pie. Es la condicion bajo la que estos numeros significan algo. */
+export const PIE =
+  "Análisis de sensibilidad con supuestos; no es predicción de cortes ni datos medidos";
+
 /* Valores por defecto de la calculadora.
  *
- * Cada campo lleva: nombre (etiqueta visible), unidad, grupo, min/max/paso y
- * `origen`, que dice de donde sale el numero:
- *   "scenarios.py: A_W"  -> copiado del motor de escenarios (supuesto de partida)
- *   null                 -> elegido para esta calculadora; no esta en ningun
- *                           archivo del repo (ver docs/FUENTES_PENDIENTES.md)
+ * Cada campo lleva: nombre (etiqueta visible), unidad, grupo, min/max/paso,
+ * valor, etiqueta de honestidad, una nota corta y `origen`, que dice de donde
+ * sale el numero:
+ *   "scenarios.py: A_W"  -> copiado de ese archivo del repo
+ *   null                 -> elegido aqui (ver docs/FUENTES_PENDIENTES.md)
  */
 export const DEFAULTS = {
   // --- Cargas de la clinica ---
   a_w: {
     nombre: "Nevera de vacunas (zona A)", unidad: "W", grupo: "cargas",
     valor: 8.0, min: 0, max: 2000, paso: 0.5,
-    origen: "scenarios.py: A_W",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "scenarios.py: A_W",
+    nota: "Potencia media de la nevera. Con ClinicKeep nunca se corta por software.",
   },
   b_w: {
     nombre: "Luces de pasillo (zona B)", unidad: "W", grupo: "cargas",
     valor: 4.0, min: 0, max: 2000, paso: 0.5,
-    origen: "scenarios.py: B_W",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "scenarios.py: B_W",
+    nota: "Se apaga sola en AHORRO si el corte se alarga y la autonomía baja de la reserva.",
   },
   c_w: {
     nombre: "Sala de espera (zona C)", unidad: "W", grupo: "cargas",
     valor: 3.0, min: 0, max: 2000, paso: 0.5,
-    origen: "scenarios.py: C_W",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "scenarios.py: C_W",
+    nota: "Lo primero que se apaga: se abre al confirmarse el corte.",
   },
 
   // --- Bateria y respaldo ---
   nominal_wh: {
-    nombre: "Bateria nominal", unidad: "Wh", grupo: "bateria",
+    nombre: "Batería nominal", unidad: "Wh", grupo: "bateria",
     valor: 128.0, min: 1, max: 100000, paso: 1,
-    origen: null,
+    etiqueta: ETIQUETAS.POR_CITAR, origen: null,
+    nota: "Capacidad del paquete. Con la profundidad de abajo da los 96 Wh útiles de config.py.",
   },
   dod_pct: {
-    nombre: "Profundidad de descarga util", unidad: "%", grupo: "bateria",
+    nombre: "Profundidad de descarga útil", unidad: "%", grupo: "bateria",
     valor: 75.0, min: 1, max: 100, paso: 1,
-    origen: null,
+    etiqueta: ETIQUETAS.POR_CITAR, origen: null,
+    nota: "Qué parte de la capacidad se puede usar sin acortar la vida de la batería.",
   },
   ciclos: {
-    nombre: "Ciclos de vida de la bateria", unidad: "ciclos", grupo: "bateria",
+    nombre: "Ciclos de vida de la batería", unidad: "ciclos", grupo: "bateria",
     valor: 300.0, min: 1, max: 100000, paso: 100,
-    origen: null,
+    etiqueta: ETIQUETAS.POR_CITAR, origen: null,
+    nota: "Ciclos completos que admite la batería. El cálculo supone un ciclo por corte.",
   },
   cortes_mes: {
     nombre: "Cortes por mes", unidad: "cortes/mes", grupo: "bateria",
     valor: 2.0, min: 0, max: 100, paso: 1,
-    origen: null,
+    etiqueta: ETIQUETAS.POR_CITAR, origen: null,
+    nota: "Cuántos cortes al mes. Depende del sitio, no del equipo.",
   },
 
   // --- Corte de red y recarga ---
   d_h: {
-    nombre: "Duracion del corte", unidad: "h", grupo: "red",
+    nombre: "Duración del corte a cubrir", unidad: "h", grupo: "red",
     valor: 12.0, min: 0.5, max: 168, paso: 0.5,
-    origen: "scenarios.py: sweep_s2a(d_h=12)",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "scenarios.py: sweep_s2a(d_h=12)",
+    nota: "La política pone la reserva (T_RESERVA_H) igual a esta duración.",
   },
   cargador_w: {
     nombre: "Potencia del cargador", unidad: "W", grupo: "red",
     valor: 30.0, min: 0.1, max: 5000, paso: 0.5,
-    origen: null,
+    etiqueta: ETIQUETAS.POR_CITAR, origen: null,
+    nota: "Se compara con la energía que hay que reponer en las horas de red.",
   },
   eta: {
     nombre: "Eficiencia de carga", unidad: "0-1", grupo: "red",
     valor: 0.85, min: 0.1, max: 1, paso: 0.01,
-    origen: "scenarios.py: ETA_CHARGE",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "scenarios.py: ETA_CHARGE",
+    nota: "Qué parte de lo que entrega el cargador llega a la batería.",
   },
 
   // --- Modelo termico de la nevera ---
   t_amb_c: {
-    nombre: "Temperatura ambiente", unidad: "C", grupo: "termico",
+    nombre: "Temperatura ambiente", unidad: "°C", grupo: "termico",
     valor: 25.0, min: -20, max: 60, paso: 1,
-    origen: "scenarios.py: T_AMB_C",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "scenarios.py: T_AMB_C",
+    nota: "Cuanto más calor hace, menos holdover: la caja se calienta antes.",
   },
   tau_h: {
     nombre: "Constante de tiempo de la nevera", unidad: "h", grupo: "termico",
     valor: 4.0, min: 0.1, max: 48, paso: 0.5,
-    origen: "config.py: TAU_H",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "config.py: TAU_H",
+    nota: "Cuánto tarda la nevera en calentarse. De ficha técnica; no se ha medido.",
   },
   t_hi_c: {
-    nombre: "Temperatura al apagarse A", unidad: "C", grupo: "termico",
+    nombre: "Temperatura al apagarse A", unidad: "°C", grupo: "termico",
     valor: 5.0, min: -20, max: 20, paso: 0.5,
-    origen: "config.py: T_HI_C",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "config.py: T_HI_C",
+    nota: "Techo de la banda de control: es la temperatura de la caja al caer la red.",
   },
   t_lim_c: {
-    nombre: "Limite seguro de la nevera", unidad: "C", grupo: "termico",
+    nombre: "Límite seguro de la nevera", unidad: "°C", grupo: "termico",
     valor: 7.5, min: -20, max: 40, paso: 0.5,
-    origen: "config.py: T_LIM_C",
+    etiqueta: ETIQUETAS.SUPUESTO, origen: "config.py: T_LIM_C",
+    nota: "El 8 °C de la banda de vacunas menos el margen del sensor.",
   },
 };
 
@@ -152,14 +186,14 @@ export function normalizarEntradas(raw) {
     } else {
       const texto = String(bruto).trim();
       if (texto === "") {
-        errores.push({ clave, mensaje: meta.nombre + ": vacio" });
+        errores.push({ clave, mensaje: meta.nombre + ": vacío" });
         continue;
       }
       // Se acepta la coma decimal (teclado en espanol) y los espacios.
       n = Number(texto.replace(",", "."));
     }
     if (!Number.isFinite(n)) {
-      errores.push({ clave, mensaje: meta.nombre + ': "' + bruto + '" no es un numero' });
+      errores.push({ clave, mensaje: meta.nombre + ': "' + bruto + '" no es un número' });
       continue;
     }
     if (n < meta.min || n > meta.max) {
@@ -183,7 +217,7 @@ export function validarCoherencia(valores) {
     errores.push({
       clave: "t_hi_c",
       mensaje: "La temperatura de apagado (" + valores.t_hi_c +
-               " C) debe ser menor que el limite seguro (" + valores.t_lim_c + " C)",
+               " °C) debe ser menor que el límite seguro (" + valores.t_lim_c + " °C)",
     });
   }
   if (valores.b_w + valores.c_w <= 0 && valores.a_w <= 0) {
