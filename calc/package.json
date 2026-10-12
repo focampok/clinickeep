@@ -1,0 +1,6 @@
+{
+  "name": "clinickeep-calc",
+  "private": true,
+  "type": "module",
+  "description": "Solo marca la carpeta como modulos ES para que Node pueda importar calc.js. Sin dependencias y sin build."
+}
