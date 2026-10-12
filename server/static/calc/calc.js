@@ -12,7 +12,8 @@
  * Fuente de verdad:
  *   * formulas  -> policy.py:holdover_h() y la forma cerrada que valida
  *                  tests/test_scenarios.py:closed_form_hours_a().
- *   * defectos  -> scenarios.py (A_W, B_W, C_W, ETA_CHARGE, T_AMB_C, d_h) y
+ *   * defectos  -> scenarios.py: PERFILES (los dos juegos de supuestos, que se
+ *                  comprueban contra este archivo en tests/test_calc_js.py) y
  *                  config.py (E_UTIL_WH, TAU_H, T_HI_C, T_LIM_C).
  *
  * Todos los valores de entrada son SUPUESTOS de partida, no datos medidos:
@@ -39,25 +40,52 @@ export const GRUPOS = [
  *   SUPUESTO POR CITAR  lo elige esta calculadora; no esta en ningun archivo del
  *                       repo y no tiene fuente verificada. Esta listado, con lo
  *                       que haria falta para citarlo, en docs/FUENTES_PENDIENTES.md
+ *   FUENTE              hay documento detras, y el campo lleva su enlace visible
+ *                       (`fuente`). Solo vale para lo que el autor verifico
  *
- * No hay ninguna URL escrita a mano aqui: inventar una cita es peor que no
- * tenerla. */
+ * Inventar una cita es peor que no tenerla: por eso hay exactamente tres
+ * FUENTE, listadas en FUENTES, y ninguna otra URL en este archivo. */
 export const ETIQUETAS = {
   SUPUESTO: "SUPUESTO",
   POR_CITAR: "SUPUESTO — por citar",
+  FUENTE: "FUENTE",
+};
+
+/* Las tres fuentes verificadas, con su enlace y lo que dicen. Van aqui y no en
+ * un comentario para que la pagina pueda enseñarlas tal cual. */
+export const FUENTES = {
+  // Nevera de la ficha PQS: es de donde sale el A del perfil PQS de referencia.
+  pqs_a_w: {
+    url: "https://extranet.who.int/prequal/sites/default/files/immunization_devices/pdf/e003/E003-066.pdf",
+    texto: "0.85 kWh/24 h continuo ≈ 35 W; un solo modelo AC.",
+  },
+  // Bandas de temperatura de las vacunas y del ensayo de holdover PQS.
+  pqs_t_lim_c: {
+    url: "https://extranet.who.int/prequal/key-resources/documents/pqs-performance-specification-e003rf021-refrigerator-or-combined",
+    texto: "Vacunas +2 a +8 °C; el holdover PQS se mide hasta +10 °C; 7.5 °C es nuestro margen.",
+  },
+  // Cortes de red: promedio de pais, no una serie del sitio.
+  cortes_mes: {
+    url: "https://www.indexmundi.com/facts/indicators/IC.ELC.OUTG/rankings/central-america",
+    texto: "Guatemala 1.3 cortes/mes, 2017, empresas (World Bank Enterprise Surveys); no da duración.",
+  },
 };
 
 /* Texto fijo del pie. Es la condicion bajo la que estos numeros significan algo. */
 export const PIE =
   "Análisis de sensibilidad con supuestos; no es predicción de cortes ni datos medidos";
 
-/* Valores por defecto de la calculadora.
+/* Valores por defecto de la calculadora (los del perfil didactico; los cambios
+ * de cada perfil estan en PERFILES).
  *
  * Cada campo lleva: nombre (etiqueta visible), unidad, grupo, min/max/paso,
  * valor, etiqueta de honestidad, una nota corta y `origen`, que dice de donde
  * sale el numero:
  *   "scenarios.py: A_W"  -> copiado de ese archivo del repo
  *   null                 -> elegido aqui (ver docs/FUENTES_PENDIENTES.md)
+ *
+ * Los campos con etiqueta FUENTE llevan ademas `fuente`, con el enlace
+ * verificado y la salvedad de que dice y que no dice ese documento.
  */
 export const DEFAULTS = {
   // --- Cargas de la clinica ---
@@ -101,9 +129,9 @@ export const DEFAULTS = {
   },
   cortes_mes: {
     nombre: "Cortes por mes", unidad: "cortes/mes", grupo: "bateria",
-    valor: 2.0, min: 0, max: 100, paso: 1,
-    etiqueta: ETIQUETAS.POR_CITAR, origen: null,
-    nota: "Cuántos cortes al mes. Depende del sitio, no del equipo.",
+    valor: 1.3, min: 0, max: 100, paso: 0.1,
+    etiqueta: ETIQUETAS.FUENTE, origen: null, fuente: FUENTES.cortes_mes,
+    nota: "Cuántos cortes al mes en el sitio. La fuente da un promedio de país (no una serie del sitio, y no dice cuánto duran).",
   },
 
   // --- Corte de red y recarga ---
@@ -148,8 +176,8 @@ export const DEFAULTS = {
   t_lim_c: {
     nombre: "Límite seguro de la nevera", unidad: "°C", grupo: "termico",
     valor: 7.5, min: -20, max: 40, paso: 0.5,
-    etiqueta: ETIQUETAS.SUPUESTO, origen: "config.py: T_LIM_C",
-    nota: "El 8 °C de la banda de vacunas menos el margen del sensor.",
+    etiqueta: ETIQUETAS.FUENTE, origen: "config.py: T_LIM_C", fuente: FUENTES.pqs_t_lim_c,
+    nota: "El 7.5 °C no es de la ficha: es el techo de 8 °C de la banda de vacunas menos un margen de sensor.",
   },
 };
 
@@ -157,6 +185,72 @@ export const DEFAULTS = {
 export function valoresPorDefecto() {
   const out = {};
   for (const clave of Object.keys(DEFAULTS)) out[clave] = DEFAULTS[clave].valor;
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Perfiles (punto 2): juegos de defectos. El de por defecto es el didactico,
+// que es el que ven los tests y el CSV que genera `scenarios.py` sin --perfil.
+//
+// Los numeros salen de `scenarios.py: PERFILES`, y `tests/test_calc_js.py`
+// comprueba que los dos archivos siguen diciendo lo mismo.
+// ---------------------------------------------------------------------------
+
+export const PERFIL_DEFECTO = "didactico";
+
+export const PERFILES = {
+  didactico: {
+    id: "didactico",
+    nombre: "Didáctico (demo)",
+    etiqueta: "perfil didáctico de demo, no representa una nevera PQS",
+    // Bateria con la que se barre el perfil, en Wh utiles: la de la maqueta.
+    rango_bateria: [24, 300],
+    campos: {},     // los defectos base de DEFAULTS, sin tocar
+  },
+  pqs_ref: {
+    id: "pqs_ref",
+    nombre: "PQS de referencia",
+    etiqueta: "perfil PQS de referencia (E003-066, 0.85 kWh/24 h); B y C por medir",
+    rango_bateria: [200, 2000],
+    campos: {
+      a_w: {
+        valor: 35.0, etiqueta: ETIQUETAS.FUENTE, origen: null, fuente: FUENTES.pqs_a_w,
+        nota: "Potencia media de la nevera: 0.85 kWh/24 h continuos de la ficha PQS son ≈ 35 W.",
+      },
+      b_w: {
+        valor: 25.0, etiqueta: ETIQUETAS.SUPUESTO,
+        origen: "scenarios.py: PERFILES['pqs_ref']",
+        nota: "SUPUESTO por medir: las luces de pasillo de una clínica con esta nevera.",
+      },
+      c_w: {
+        valor: 20.0, etiqueta: ETIQUETAS.SUPUESTO,
+        origen: "scenarios.py: PERFILES['pqs_ref']",
+        nota: "SUPUESTO por medir: la sala de espera de esa misma clínica.",
+      },
+      nominal_wh: {
+        valor: 400.0, etiqueta: ETIQUETAS.POR_CITAR, origen: null,
+        nota: "Con el 75 % de profundidad da 300 Wh útiles, dentro del rango PQS de 200 a 2000 Wh.",
+      },
+    },
+  },
+};
+
+/* Los campos de un perfil: los base de DEFAULTS con lo que el perfil cambie.
+ * Devuelve copias: cambiar un perfil no puede tocar los defectos base. */
+export function camposDePerfil(perfil_id) {
+  const p = PERFILES[perfil_id] || PERFILES[PERFIL_DEFECTO];
+  const out = {};
+  for (const clave of Object.keys(DEFAULTS)) {
+    out[clave] = Object.assign({}, DEFAULTS[clave], (p.campos && p.campos[clave]) || {});
+  }
+  return out;
+}
+
+/* Los valores de un perfil, sin la metadata. */
+export function valoresDePerfil(perfil_id) {
+  const campos = camposDePerfil(perfil_id);
+  const out = {};
+  for (const clave of Object.keys(campos)) out[clave] = campos[clave].valor;
   return out;
 }
 

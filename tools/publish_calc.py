@@ -11,8 +11,9 @@ Asi `server/` sigue siendo autocontenido: no lee nada de `calc/` en tiempo de
 ejecucion, solo sirve la copia. La pagina se sirve en `/calc`.
 
 Antes de copiar compara los valores por defecto de `calc.js` con los de
-`scenarios.py` y `config.py`, que son la fuente de verdad. Si alguien mueve uno
-y no el otro, lo dice: es un aviso, no un error (puede ser a proposito).
+`scenarios.py` (perfiles incluidos) y `config.py`, que son la fuente de verdad.
+Si alguien mueve uno y no el otro, lo dice: es un aviso, no un error (puede ser
+a proposito).
 
 Uso:
     python3 tools/publish_calc.py
@@ -20,7 +21,6 @@ Uso:
 """
 
 import argparse
-import inspect
 import os
 import re
 import shutil
@@ -48,6 +48,24 @@ ESPEJO = (
 def valor_defecto(js, clave):
     """El `valor:` de un campo de DEFAULTS en calc.js (None si no se puede leer)."""
     campo = re.search(r"\n  %s: \{(.*?)\n  \}," % clave, js, re.S)
+    if not campo:
+        return None
+    numero = re.search(r"valor:\s*(-?[\d.]+)", campo.group(1))
+    return float(numero.group(1)) if numero else None
+
+
+def _bloque_perfil(js, perfil):
+    """El trozo de calc.js de un perfil de PERFILES (None si no esta)."""
+    m = re.search(r"\n  %s: \{(.*?)\n  \}," % perfil, js, re.S)
+    return m.group(1) if m else None
+
+
+def valor_en_perfil(js, perfil, clave):
+    """El `valor:` que un perfil cambia para un campo (None si no lo cambia)."""
+    bloque = _bloque_perfil(js, perfil)
+    if bloque is None:
+        return None
+    campo = re.search(r"\n      %s: \{(.*?)\n      \}," % clave, bloque, re.S)
     if not campo:
         return None
     numero = re.search(r"valor:\s*(-?[\d.]+)", campo.group(1))
@@ -86,12 +104,41 @@ def comparar_con_la_fuente(js):
             avisos.append("E_UTIL_WH: calc.js da %s Wh y config.py dice %s Wh"
                           % (util, config.Config.E_UTIL_WH))
 
-    # La duracion de corte por defecto sale del barrido S2a.
+    # La duracion de corte por defecto sale del perfil didactico.
     d_calc = valor_defecto(js, "d_h")
-    d_sc = inspect.signature(scenarios.sweep_s2a).parameters["d_h"].default
-    print("%-12s %-10s %-10s %s" % ("d_h", d_calc, d_sc, "scenarios.py: sweep_s2a(d_h=...)"))
+    d_sc = scenarios.PERFILES[scenarios.PERFIL_DEFECTO].d_h
+    print("%-12s %-10s %-10s %s" % ("d_h", d_calc, d_sc, "scenarios.py: PERFILES[didactico]"))
     if d_calc is not None and abs(d_calc - d_sc) > 1e-9:
-        avisos.append("d_h: calc.js dice %s y el barrido S2a usa %s" % (d_calc, d_sc))
+        avisos.append("d_h: calc.js dice %s y el perfil usa %s" % (d_calc, d_sc))
+
+    # Cada perfil tiene que decir lo mismo en los dos archivos.
+    print("\nperfiles (calc.js vs scenarios.py)")
+    for clave, p in scenarios.PERFILES.items():
+        if _bloque_perfil(js, clave) is None:
+            avisos.append("calc.js no tiene el perfil %s" % clave)
+            continue
+        pares = [("a_w", p.a_w), ("b_w", p.b_w), ("c_w", p.c_w)]
+        print("  %-10s %s" % (clave, ", ".join(
+            "%s %s W" % (nombre, valor_en_perfil(js, clave, nombre))
+            for nombre, _ in pares if valor_en_perfil(js, clave, nombre) is not None)
+            or "(no cambia A/B/C)"))
+        for nombre, esperado in pares:
+            obtenido = valor_en_perfil(js, clave, nombre)
+            if obtenido is not None and abs(obtenido - esperado) > 1e-9:
+                avisos.append("%s/%s: calc.js dice %s y scenarios.py %s"
+                              % (clave, nombre, obtenido, esperado))
+        rango = re.search(r"rango_bateria:\s*\[\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\]",
+                          _bloque_perfil(js, clave))
+        print("  %-10s bateria = %s" % (clave, (p.e_min, p.e_max)))
+        if rango is None:
+            avisos.append("%s: calc.js no declara rango_bateria" % clave)
+        elif (float(rango.group(1)), float(rango.group(2))) != (p.e_min, p.e_max):
+            avisos.append("%s: calc.js barre %s-%s Wh y scenarios.py %s-%s Wh"
+                          % (clave, rango.group(1), rango.group(2), p.e_min, p.e_max))
+        etiqueta = re.search(r'etiqueta:\s*"([^"]+)"', _bloque_perfil(js, clave))
+        print("  %-10s etiqueta = %r" % (clave, etiqueta.group(1) if etiqueta else None))
+        if etiqueta is None or etiqueta.group(1) != p.etiqueta:
+            avisos.append("%s: la etiqueta visible no coincide con scenarios.py" % clave)
 
     return avisos
 

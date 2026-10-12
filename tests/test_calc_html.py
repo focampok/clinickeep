@@ -72,6 +72,24 @@ def test_se_puede_copiar_y_descargar():
     assert "URL.createObjectURL" in PAGINA
 
 
+def test_se_puede_elegir_perfil():
+    """Dos perfiles de supuestos, elegibles, y el elegido se puede compartir."""
+    assert "PERFILES" in PAGINA
+    assert 'createElement("select")' in PAGINA
+    assert 'id = "perfil"' in PAGINA
+    assert "location.search" in PAGINA            # ?perfil=pqs_ref
+    assert "cambiarPerfil" in PAGINA              # al cambiar, recarga los defectos
+
+
+def test_las_fuentes_van_con_enlace_visible():
+    """La etiqueta FUENTE se enseña con el enlace entero a la vista, no con un
+    "ver mas", y con la salvedad al lado."""
+    assert "meta.fuente" in PAGINA
+    assert "noopener noreferrer" in PAGINA
+    assert "a.textContent = f.url" in PAGINA
+    assert "etiqueta--fuente" in PAGINA
+
+
 def test_no_depende_de_nada_de_fuera():
     """Sin CDN, sin fuentes de Google, sin framework: solo calc.js de al lado."""
     externos = re.findall(r'(?:src|href)\s*=\s*"(https?://[^"]+)"', PAGINA)

@@ -5,8 +5,12 @@
  * (scenarios.py, la fuente de verdad) y comprueba que calc.js reproduce cada
  * fila con la forma cerrada.
  *
- *   node calc/test_calc.mjs            -> usa out/ del repo
- *   node calc/test_calc.mjs <carpeta>  -> usa otra carpeta con los 3 CSV
+ *   node calc/test_calc.mjs                       -> out/ del repo, perfil didactico
+ *   node calc/test_calc.mjs <carpeta>             -> otra carpeta con los 3 CSV
+ *   node calc/test_calc.mjs <carpeta> <perfil>    -> con los defectos de ese perfil
+ *
+ * El perfil importa: los CSV del perfil PQS (out/pqs_ref/) se generan con
+ * A=35 W, y calc.js solo los reproduce si usa los defectos de `pqs_ref`.
  *
  * Tolerancias. La forma cerrada es continua y scenarios.py integra con pasos de
  * DT_H = 0.02 h, asi que las horas pueden diferir un pelo:
@@ -26,7 +30,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
-import { valoresPorDefecto, simular } from "./calc.js";
+import { PERFILES, PERFIL_DEFECTO, valoresDePerfil, simular } from "./calc.js";
 
 const TOL_H = 0.05;
 const TOL_WH = 0.5;
@@ -34,6 +38,11 @@ const TOL_PP = 0.1;
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const CARPETA = resolve(process.argv[2] || join(AQUI, "..", "out"));
+const PERFIL = process.argv[3] || PERFIL_DEFECTO;
+if (!Object.prototype.hasOwnProperty.call(PERFILES, PERFIL)) {
+  console.error(`Perfil desconocido: ${PERFIL} (hay: ${Object.keys(PERFILES).join(", ")})`);
+  process.exit(2);
+}
 
 let comprobaciones = 0;
 const fallos = [];
@@ -59,12 +68,12 @@ function leerCsv(nombre) {
 const num = (v) => Number(v);
 
 /* Entradas de la calculadora a partir de una fila del CSV: el resto son los
- * valores por defecto (que es, de paso, como se comprueba que siguen siendo los
+ * defectos del perfil (que es, de paso, como se comprueba que siguen siendo los
  * de scenarios.py/config.py: si cambiaran, los numeros no cuadrarian).
  * dod_pct = 100 hace que la bateria nominal del defecto valga exactamente la
  * e_wh de la fila. */
 function entradasDeFila(fila, extra = {}) {
-  return Object.assign(valoresPorDefecto(), {
+  return Object.assign(valoresDePerfil(PERFIL), {
     nominal_wh: num(fila.e_wh),
     dod_pct: 100,
     d_h: num(fila.d_h),
@@ -159,7 +168,7 @@ function probarS3() {
 
 // --- ejecucion --------------------------------------------------------------
 
-console.log(`calc.js contra el motor de escenarios (${CARPETA})`);
+console.log(`calc.js contra el motor de escenarios (${CARPETA}), perfil ${PERFIL}`);
 let filas = 0;
 try {
   filas += probarS2a();

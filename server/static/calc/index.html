@@ -112,7 +112,20 @@
   .etiqueta b { font-weight: 700; }
   .etiqueta--supuesto b { color: var(--muted); }
   .etiqueta--citar b { color: var(--warn); }
+  .etiqueta--fuente b { color: var(--ok); }
   .nota { color: var(--muted); }
+  /* El enlace de una fuente verificada: URL visible (se lee entera, sin
+     "ver más") y detras la salvedad de lo que dice el documento. */
+  .fuente {
+    margin: .3rem 0 0; padding-left: .5rem; font-size: .74rem; line-height: 1.35;
+    color: var(--muted); border-left: 2px solid var(--ok); overflow-wrap: anywhere;
+  }
+  .fuente a { font-weight: 600; }
+  .campo select {
+    font: inherit; padding: .45rem .55rem; width: 100%;
+    color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: .4rem;
+  }
 
   .acciones { display: flex; flex-wrap: wrap; gap: .5rem; margin: .25rem 0 1.25rem; }
   button, .boton {
@@ -244,8 +257,9 @@ setTimeout(function () {
 </script>
 
 <script type="module">
-import { DEFAULTS, GRUPOS, MAX_H, ETIQUETAS, PIE, valoresPorDefecto,
-         energiaUtilWh, normalizarEntradas, validarCoherencia, simular } from "./calc.js";
+import { DEFAULTS, GRUPOS, MAX_H, ETIQUETAS, PIE, PERFILES, PERFIL_DEFECTO,
+         camposDePerfil, valoresDePerfil, energiaUtilWh, normalizarEntradas,
+         validarCoherencia, simular } from "./calc.js";
 
 // --- iconos: siempre acompañan a un texto, nunca lo sustituyen ---------------
 const SVG = (cuerpo) =>
@@ -263,6 +277,9 @@ const PIE_TEXTO = PIE;
 
 function n1(x) { return Number(x).toFixed(1); }
 function n2(x) { return Number(x).toFixed(2); }
+/* Entero o decimal corto, sin los ceros de cola ni el ruido de la coma flotante
+ * (1.3 cortes/mes son 15.6 al año, no 15.600000000000001). */
+function nCorto(x) { return String(Number(Number(x).toFixed(2))); }
 function horas(x) { return Number(x) >= MAX_H ? MAX_H + " <span class=\"unit\">h o más (tope)</span>" : n1(x) + " <span class=\"unit\">h</span>"; }
 
 function textoCobertura(res, d_h) {
@@ -299,15 +316,66 @@ function textoBateria(res) {
   }
   const clase = b.vida_anios < 3 ? "no" : (b.vida_anios < 8 ? "aviso" : "ok");
   return { clase, icono: ICONO[clase], titulo: "Unos " + n1(b.vida_anios) + " años",
-    detalle: b.cortes_anio + " cortes al año y " + b.ciclos + " ciclos de vida. Se supone un ciclo completo por corte." };
+    detalle: nCorto(b.cortes_anio) + " cortes al año y " + b.ciclos + " ciclos de vida. Se supone un ciclo completo por corte." };
 }
 
 // --- pintado del formulario -------------------------------------------------
+// El perfil activo. Se puede pedir por la URL (?perfil=pqs_ref): asi el enlace
+// se puede compartir y las capturas se pueden repetir.
+let perfilActivo = PERFIL_DEFECTO;
+
+function perfilInicial() {
+  const m = /[?&]perfil=([^&]+)/.exec(window.location.search);
+  const id = m ? decodeURIComponent(m[1]) : PERFIL_DEFECTO;
+  return Object.prototype.hasOwnProperty.call(PERFILES, id) ? id : PERFIL_DEFECTO;
+}
+
+/* El selector de perfil. Va en el mismo formulario, pero fuera de los grupos de
+ * campos: al cambiar de perfil se vuelven a pintar solo los campos. */
+function selectorPerfil() {
+  const meta = PERFILES[perfilActivo];
+  const fs = document.createElement("fieldset");
+  fs.id = "fieldset-perfil";
+  const lg = document.createElement("legend");
+  lg.textContent = "Perfil de supuestos";
+  const div = document.createElement("div");
+  div.className = "campo";
+
+  const label = document.createElement("label");
+  label.setAttribute("for", "perfil");
+  label.textContent = "Perfil ";
+
+  const sel = document.createElement("select");
+  sel.id = "perfil";
+  sel.name = "perfil";
+  for (const id of Object.keys(PERFILES)) {
+    const op = document.createElement("option");
+    op.value = id;
+    op.textContent = PERFILES[id].nombre;
+    sel.appendChild(op);
+  }
+  sel.value = perfilActivo;
+  sel.setAttribute("aria-describedby", "perfil-nota");
+
+  const nota = document.createElement("p");
+  nota.className = "nota";
+  nota.id = "perfil-nota";
+  // La etiqueta visible del perfil: la misma frase que usa scenarios.py.
+  nota.textContent = meta.etiqueta + ". Batería barrida: " +
+    meta.rango_bateria[0] + " a " + meta.rango_bateria[1] + " Wh útiles.";
+
+  div.append(label, sel, nota);
+  fs.appendChild(div);
+  return fs;
+}
+
 function pintarFormulario() {
   const form = document.getElementById("formulario");
   form.innerHTML = "";
+  const campos = camposDePerfil(perfilActivo);
+  form.appendChild(selectorPerfil());
   for (const grupo of GRUPOS) {
-    const claves = Object.keys(DEFAULTS).filter((k) => DEFAULTS[k].grupo === grupo.id);
+    const claves = Object.keys(DEFAULTS).filter((k) => campos[k].grupo === grupo.id);
     if (!claves.length) continue;
     const fs = document.createElement("fieldset");
     const lg = document.createElement("legend");
@@ -315,14 +383,34 @@ function pintarFormulario() {
     fs.appendChild(lg);
     const cont = document.createElement("div");
     cont.className = "campos";
-    for (const clave of claves) cont.appendChild(campo(clave));
+    for (const clave of claves) cont.appendChild(campo(clave, campos[clave]));
     fs.appendChild(cont);
     form.appendChild(fs);
   }
 }
 
-function campo(clave) {
-  const meta = DEFAULTS[clave];
+function claseEtiqueta(etiqueta) {
+  if (etiqueta === ETIQUETAS.FUENTE) return "etiqueta--fuente";
+  if (etiqueta === ETIQUETAS.POR_CITAR) return "etiqueta--citar";
+  return "etiqueta--supuesto";
+}
+
+/* El enlace de una fuente verificada: la URL se ve entera (no un "ver más") y
+ * detras va lo que dice el documento. */
+function enlaceFuente(f) {
+  const p = document.createElement("p");
+  p.className = "fuente";
+  const a = document.createElement("a");
+  a.href = f.url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.textContent = f.url;
+  p.appendChild(a);
+  p.appendChild(document.createTextNode(" — " + f.texto));
+  return p;
+}
+
+function campo(clave, meta) {
   const div = document.createElement("div");
   div.className = "campo";
 
@@ -344,7 +432,7 @@ function campo(clave) {
   input.setAttribute("aria-describedby", clave + "-fuente " + clave + "-nota");
 
   const fuente = document.createElement("p");
-  fuente.className = "etiqueta " + (meta.etiqueta === ETIQUETAS.POR_CITAR ? "etiqueta--citar" : "etiqueta--supuesto");
+  fuente.className = "etiqueta " + claseEtiqueta(meta.etiqueta);
   fuente.id = clave + "-fuente";
   const b = document.createElement("b");
   b.textContent = meta.etiqueta;
@@ -357,7 +445,20 @@ function campo(clave) {
   nota.textContent = meta.nota;
 
   div.append(label, input, fuente, nota);
+  if (meta.fuente) div.appendChild(enlaceFuente(meta.fuente));
   return div;
+}
+
+/* Cambiar de perfil recarga los defectos de ese perfil (y sus etiquetas, que
+ * no son las mismas: el mismo campo puede ser SUPUESTO en un perfil y FUENTE en
+ * el otro). */
+function cambiarPerfil(id) {
+  perfilActivo = Object.prototype.hasOwnProperty.call(PERFILES, id) ? id : PERFIL_DEFECTO;
+  pintarFormulario();
+  document.getElementById("estado-copia").textContent = "";
+  const sel = document.getElementById("perfil");
+  if (sel) sel.focus();                 // no perder el sitio al cambiar con teclado
+  calcular();
 }
 
 // --- calculo y resultados ---------------------------------------------------
@@ -454,13 +555,16 @@ function calcular() {
 function resumenTexto() {
   if (!ultimo) return null;
   const { entradas, res } = ultimo;
+  const campos = camposDePerfil(perfilActivo);
   const linea = (t) => t + "\n";
   let s = "ClinicKeep - calculadora de dimensionamiento\n";
-  s += PIE_TEXTO + "\n\nENTRADAS\n";
+  s += PIE_TEXTO + "\n";
+  s += "Perfil: " + PERFILES[perfilActivo].nombre + " (" + PERFILES[perfilActivo].etiqueta + ")\n\nENTRADAS\n";
   for (const clave of Object.keys(DEFAULTS)) {
-    const meta = DEFAULTS[clave];
+    const meta = campos[clave];
     s += linea("  " + meta.nombre + ": " + entradas[clave] + " " + meta.unidad +
-      "  [" + meta.etiqueta + (meta.origen ? " · " + meta.origen : "") + "]");
+      "  [" + meta.etiqueta + (meta.origen ? " · " + meta.origen : "") +
+      (meta.fuente ? " · fuente: " + meta.fuente.url : "") + "]");
   }
   s += "\nRESULTADOS\n";
   s += linea("  Sin ClinicKeep: " + n2(res.sin.protegidas_h) + " h protegidas (autonomia de A " +
@@ -472,7 +576,7 @@ function resumenTexto() {
   s += linea("  Cargador de " + n1(entradas.cargador_w) + " W: " + textoRecarga(entradas, res).titulo);
   s += linea("  Bateria: " + (res.bateria.vida_anios === null
     ? "sin cortes no hay desgaste por cortes"
-    : n1(res.bateria.vida_anios) + " anios (" + res.bateria.cortes_anio + " cortes/anio, " +
+    : n1(res.bateria.vida_anios) + " anios (" + nCorto(res.bateria.cortes_anio) + " cortes/anio, " +
       res.bateria.ciclos + " ciclos de vida)"));
   return s.replace(/<[^>]+>/g, "");
 }
@@ -485,11 +589,13 @@ const cita = (v) => {
 function csvTexto() {
   if (!ultimo) return null;
   const { entradas, res } = ultimo;
+  const campos = camposDePerfil(perfilActivo);
   const filas = [["tipo", "clave", "valor", "unidad", "etiqueta", "nota"]];
   for (const clave of Object.keys(DEFAULTS)) {
-    const meta = DEFAULTS[clave];
+    const meta = campos[clave];
     filas.push(["entrada", clave, entradas[clave], meta.unidad, meta.etiqueta,
-      meta.nota + (meta.origen ? " || origen: " + meta.origen : "")]);
+      meta.nota + (meta.origen ? " || origen: " + meta.origen : "") +
+      (meta.fuente ? " || fuente: " + meta.fuente.url + " — " + meta.fuente.texto : "")]);
   }
   filas.push(["salida", "prot_sin_h", n2(res.sin.protegidas_h), "h", "", "horas protegidas sin ClinicKeep"]);
   filas.push(["salida", "prot_con_h", n2(res.con.protegidas_h), "h", "", "horas protegidas con ClinicKeep"]);
@@ -497,6 +603,8 @@ function csvTexto() {
   filas.push(["salida", "cobertura_estado", res.cobertura.estado, "0/1/2", "", "0 no cubre, 1 solo con ClinicKeep, 2 cubre con y sin"]);
   filas.push(["salida", "recarga_estado", res.recarga.estado, "0/1/2", "", "0 no recarga, 1 solo con ClinicKeep, 2 recarga con y sin"]);
   filas.push(["salida", "vida_anios", res.bateria.vida_anios === null ? "" : n1(res.bateria.vida_anios), "anios", "", "ciclos / (cortes_mes x 12)"]);
+  filas.push(["meta", "perfil", PERFILES[perfilActivo].id, "", "",
+    PERFILES[perfilActivo].etiqueta]);
   filas.push(["meta", "pie", PIE_TEXTO, "", "", ""]);
   filas.push(["meta", "generado", new Date().toISOString(), "", "", ""]);
   return filas.map((f) => f.map(cita).join(",")).join("\n") + "\n";
@@ -533,7 +641,7 @@ document.getElementById("btn-csv").addEventListener("click", (ev) => {
 });
 
 document.getElementById("btn-reset").addEventListener("click", () => {
-  const v = valoresPorDefecto();
+  const v = valoresDePerfil(perfilActivo);
   for (const clave of Object.keys(v)) {
     const el = document.getElementById(clave);
     if (el) el.value = v[clave];
@@ -543,7 +651,11 @@ document.getElementById("btn-reset").addEventListener("click", () => {
 });
 
 document.getElementById("formulario").addEventListener("input", calcular);
+document.getElementById("formulario").addEventListener("change", (ev) => {
+  if (ev.target && ev.target.id === "perfil") cambiarPerfil(ev.target.value);
+});
 
+perfilActivo = perfilInicial();
 pintarFormulario();
 calcular();
 </script>
