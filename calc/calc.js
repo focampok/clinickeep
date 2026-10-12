@@ -191,3 +191,118 @@ export function validarCoherencia(valores) {
   }
   return errores;
 }
+
+// ---------------------------------------------------------------------------
+// Formulas (punto 3): una funcion pura por calculo.
+//
+// Los nombres de las horas son los mismos del motor de escenarios:
+//   prot_sin_h / prot_con_h  = horas protegidas SIN y CON ClinicKeep
+//   e_usada_wh               = energia que sale de la bateria durante el corte
+// ---------------------------------------------------------------------------
+
+/* Horas con energia en A si NO hay ClinicKeep: A, B y C comparten la bateria
+ * hasta agotarla. Equivale a scenarios.py:outage_baseline(). */
+export function horasA_sin(e_util_wh, a_w, b_w, c_w) {
+  const p = a_w + b_w + c_w;
+  if (p < 0.05) return MAX_H;   // sin carga la bateria no se agota (policy._hours)
+  return Math.min(e_util_wh / p, MAX_H);
+}
+
+/* Horas con energia en A CON ClinicKeep. Forma cerrada: la misma que valida
+ * tests/test_scenarios.py:closed_form_hours_a().
+ *
+ * Al caer la red se abre C. B sigue hasta que la autonomia total baja de la
+ * duracion del corte d (la politica lleva T_RESERVA_H = d), o sea en
+ * t_desconexion = e/(a+b) - d. A partir de ahi solo queda A.
+ *
+ *   si e/(a+b) < d : B no llega a desconectarse y la bateria se agota con A+B
+ *                    (queda e/a horas de A)
+ *   si no          : t_desconexion horas con A+B  +  el resto con A sola */
+export function horasA_con(e_util_wh, a_w, b_w, d_h) {
+  if (a_w < 0.05) return MAX_H;         // A nunca se agota: no hay limite
+  const p = a_w + b_w;
+  if (e_util_wh / p < d_h) return Math.min(e_util_wh / a_w, MAX_H);
+  const t_desconexion_h = e_util_wh / p - d_h;
+  return Math.min(t_desconexion_h + d_h * p / a_w, MAX_H);
+}
+
+/* Horas hasta que la caja pasa de T_HI a T_LIM sin energia (modelo de Newton
+ * de masa concentrada). Es policy.py:holdover_h() literal:
+ *
+ *   T(t) = Ta + (T_HI - Ta) * exp(-t/tau)  =>  t = tau * ln((Ta-T_HI)/(Ta-T_LIM))
+ *
+ * Si el ambiente no supera T_LIM, la caja nunca lo alcanza: MAX_H. */
+export function holdoverHoras(tau_h, t_hi_c, t_lim_c, t_amb_c) {
+  if (t_amb_c <= t_lim_c) return MAX_H;
+  return Math.min(
+    tau_h * Math.log((t_amb_c - t_hi_c) / (t_amb_c - t_lim_c)),
+    MAX_H
+  );
+}
+
+/* Horas protegidas = horas con energia en A + holdover termico de la caja.
+ * Es la definicion que usa scenarios.py (autonomia + tiempo de gracia). */
+export function horasProtegidas(horas_a_h, holdover_h) {
+  return horas_a_h + holdover_h;
+}
+
+/* Energia que sale de la bateria durante un corte de d_h horas SIN ClinicKeep:
+ * A, B y C tiran de ella, asi que como mucho se agota. */
+export function energiaUsada_sin(e_util_wh, a_w, b_w, c_w, d_h) {
+  return Math.min(e_util_wh, (a_w + b_w + c_w) * d_h);
+}
+
+/* Energia que sale de la bateria durante un corte de d_h horas CON ClinicKeep:
+ * si B se desconecta dentro del corte, cuenta (a+b) hasta la desconexion y a
+ * desde ahi; si no se desconecta, cuenta (a+b) todo el corte. */
+export function energiaUsada_con(e_util_wh, a_w, b_w, d_h) {
+  const p = a_w + b_w;
+  if (p < 0.05) return 0.0;
+  if (e_util_wh / p < d_h) {
+    // B se abre en el primer paso: lo cubre A sola, y la bateria puede no
+    // llegar a las d_h horas.
+    return Math.min(e_util_wh, a_w * d_h);
+  }
+  const t_desconexion_h = e_util_wh / p - d_h;
+  const t_con_b_h = Math.min(t_desconexion_h, d_h);
+  return Math.min(e_util_wh, p * t_con_b_h + a_w * (d_h - t_con_b_h));
+}
+
+/* Mejora (%) del tiempo protegido frente a no hacer nada. Sin horas sin
+ * ClinicKeep no hay proporcion que calcular (null). */
+export function mejoraPct(prot_sin_h, prot_con_h) {
+  if (prot_sin_h <= 0) return null;
+  return (prot_con_h / prot_sin_h - 1.0) * 100.0;
+}
+
+/* Los 3 estados de S2b: la nevera cubre todo el corte?
+ *   estado 0 -> no cubre ni con ClinicKeep
+ *   estado 1 -> solo cubre con ClinicKeep
+ *   estado 2 -> cubre con y sin ClinicKeep */
+export function estadoCobertura(prot_sin_h, prot_con_h, d_h) {
+  const cubre_sin = prot_sin_h >= d_h;
+  const cubre_con = prot_con_h >= d_h;
+  return { cubre_sin, cubre_con, estado: cubre_sin ? 2 : (cubre_con ? 1 : 0) };
+}
+
+/* S3: el cargador alcanza a reponer entre cortes? La energia que hay que meter
+ * es la usada / eficiencia (lo que se pierde cargando), y el tiempo disponible
+ * es (24 - duracion del corte) horas de red. */
+export function recargaAlcanza(e_usada_wh, eta, cargador_w, t_red_h) {
+  return e_usada_wh / eta <= cargador_w * t_red_h;
+}
+
+/* Los 3 estados de S3:
+ *   0 -> no recarga ni con ClinicKeep, 1 -> solo con ClinicKeep, 2 -> recarga
+ *   con y sin ClinicKeep. */
+export function estadoRecarga(ok_sin, ok_con) {
+  return ok_sin ? 2 : (ok_con ? 1 : 0);
+}
+
+/* Vida estimada de la bateria en anios: ciclos de vida / ciclos que se gastan
+ * al anio. Aqui un corte = un ciclo completo (conservador: el corte promedio
+ * rara vez agota la bateria). Sin cortes no hay desgaste: null. */
+export function vidaBateriaAnios(ciclos, cortes_mes) {
+  if (cortes_mes <= 0) return null;
+  return ciclos / (cortes_mes * 12.0);
+}
