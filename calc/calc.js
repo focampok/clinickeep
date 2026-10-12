@@ -120,7 +120,7 @@ export const DEFAULTS = {
     nota: "Se compara con la energía que hay que reponer en las horas de red.",
   },
   eta: {
-    nombre: "Eficiencia de carga", unidad: "0-1", grupo: "red",
+    nombre: "Eficiencia de carga", unidad: "0 a 1", grupo: "red",
     valor: 0.85, min: 0.1, max: 1, paso: 0.01,
     etiqueta: ETIQUETAS.SUPUESTO, origen: "scenarios.py: ETA_CHARGE",
     nota: "Qué parte de lo que entrega el cargador llega a la batería.",
