@@ -85,8 +85,8 @@ Como se lee esto:
 | 2 | `4a81556` | `PERFILES` y `FUENTES` en `calc.js`, selector de perfil (y `?perfil=`), etiqueta FUENTE con enlace visible, `cortes_mes` 1.3, `test_calc.mjs --perfil`, `publish_calc.py` compara perfiles |
 | 3 | `a26528b` | `NOTA_HOLDOVER` en la calculadora (modulo + HTML) y en el panel |
 | 4 | `48b3ae8` | `docs/FUENTES_PENDIENTES.md` con la tabla "Con fuente" y la prueba que la vigila |
-| 5 | *(este resumen)* | CSV de los dos perfiles regenerados, `test_calc.mjs` para los dos, informe de S2a |
-| 6 | | Capturas en `evidence/` y push a `origin/main` |
+| 5 | `971667b` | CSV de los dos perfiles regenerados, `test_calc.mjs` para los dos, informe de S2a |
+| 6 | *(este commit)* | Capturas en `evidence/` y push a `origin/main` |
 
 ### Archivos nuevos
 
