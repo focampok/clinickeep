@@ -381,4 +381,12 @@ if os.path.isdir(STATIC_DIR):
     # static/img/*.png y static/csv/*.csv los publica tools/publish_scenarios.py
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+# La calculadora de dimensionamiento (Fase 4) la publica tools/publish_calc.py,
+# que copia calc/ aqui dentro (asi server/ sigue siendo autocontenido). Va
+# montada en /calc, y no bajo /static, para que la pagina pueda pedir su calc.js
+# con una ruta relativa. html=True sirve index.html en /calc.
+CALC_DIR = os.path.join(STATIC_DIR, "calc")
+if os.path.isdir(CALC_DIR):
+    app.mount("/calc", StaticFiles(directory=CALC_DIR, html=True), name="calc")
+
 init_db()

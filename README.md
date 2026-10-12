@@ -18,6 +18,12 @@ y el motor de escenarios usan exactamente el mismo código.
 | `tests/test_sync.py` | `wokwi/policy.py` y `config.py` idénticos a la raíz |
 | `PROMPT_correcciones.md` | Prompt para el agente: 4 correcciones de la Fase 1 |
 | `tools/gen_pinout.py` | Genera `docs/PINOUT.md` y `docs/SCHEMA.md` desde el diagrama |
+| `calc/index.html` + `calc/calc.js` | Calculadora de dimensionamiento (JS puro, sin build): horas protegidas sin/con ClinicKeep, si cubre el corte y si alcanza el cargador. Se sirve en `/calc` |
+| `calc/test_calc.mjs` | Compara `calc.js` fila a fila con los CSV de `scenarios.py` (Node, sin dependencias) |
+| `tests/test_calc_js.py` | Enlaza esa comparación con pytest (se omite sin `node`) y vigila las etiquetas de los supuestos |
+| `tests/test_calc_html.py` | Lo que la página tiene que tener: aviso de simulación, pie, tema claro/oscuro, teclado, 360 px, copiar y CSV |
+| `tools/publish_calc.py` | Copia `calc/` a `server/static/calc/` y avisa si los supuestos se separan de `scenarios.py`/`config.py` |
+| `docs/FUENTES_PENDIENTES.md` | Supuestos sin fuente, y qué haría falta para citar cada uno |
 | `docs/PINOUT.md` | Pinout GPIO ↔ señal (generado; no editar a mano) |
 | `docs/SCHEMA.md` | Esquema del circuito en texto + enlace al proyecto Cirkit |
 | `docs/RELAY_CHECK.md` | Polaridad de los relés y estado seguro (medido en simulador) |
@@ -30,7 +36,7 @@ cd clinickeep
 python3 -m venv .venv
 source .venv/bin/activate
 pip install pytest matplotlib
-pytest -q          # 33 pasan
+pytest -q          # 88 pasan (sin node instalado: 83 y 5 omitidas)
 python3 demo.py    # tabla del corte y comparación con/sin ClinicKeep
 ```
 

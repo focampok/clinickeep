@@ -11,10 +11,10 @@ nada más hace falta.
 
 | Ruta | Qué es |
 |---|---|
-| `server/app.py` | FastAPI: `POST /ingest`, `GET /api/latest`, `GET /api/events`, `GET /healthz`, dashboard |
+| `server/app.py` | FastAPI: `POST /ingest`, `GET /api/latest`, `GET /api/events`, `GET /healthz`, dashboard y `/calc` |
 | `server/requirements.txt` | Dependencias (FastAPI, uvicorn, httpx) |
 | `server/Procfile` | `web: uvicorn app:app --host 0.0.0.0 --port $PORT` |
-| `server/static/` | `index.html`, mapas y CSV publicados con `tools/publish_scenarios.py` |
+| `server/static/` | `index.html`, los mapas y CSV publicados con `tools/publish_scenarios.py`, y la calculadora de `calc/` publicada con `tools/publish_calc.py` (se sirve en `/calc`) |
 
 ## Pasos
 

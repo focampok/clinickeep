@@ -67,6 +67,28 @@ def test_estaticos_publicados(cliente):
     assert "mejora_pct" in r.text               # cabecera del CSV
 
 
+def test_calculadora_publicada(cliente):
+    """La calculadora que publica tools/publish_calc.py se sirve en /calc.
+
+    La copia vive DENTRO de server/ (server/static/calc/), asi que esta prueba
+    no necesita que calc/ este al lado.
+    """
+    r = cliente.get("/calc")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert "SIMULACIÓN" in r.text                    # el banner
+    assert "prefers-color-scheme" in r.text          # claro/oscuro
+
+    # El modulo viaja con la pagina: /calc tiene que ser autocontenido.
+    js = cliente.get("/calc/calc.js")
+    assert js.status_code == 200
+    assert "export function simular" in js.text
+
+
+def test_el_panel_enlaza_a_la_calculadora(cliente):
+    assert 'href="/calc"' in cliente.get("/").text
+
+
 def test_cors_cerrado_por_defecto(cliente):
     """Sin ALLOWED_ORIGINS no se abre CORS, ni siquiera al propio host."""
     r = cliente.get("/api/latest", headers={"Origin": "http://ejemplo.invalido"})
