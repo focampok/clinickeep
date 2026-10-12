@@ -197,6 +197,11 @@ def test_los_supuestos_por_citar_estan_listados():
         if meta["etiqueta"] == "SUPUESTO — por citar":
             assert "por citar" in fila, (
                 "%s esta 'por citar' y en el documento no se ve" % clave)
+        elif meta["etiqueta"] == "FUENTE":
+            # Un campo citado tiene que estar en la tabla "Con fuente", con su
+            # enlace: si no, la etiqueta de la pagina no la respalda el documento.
+            assert meta["fuente"]["url"] in fila, (
+                "%s dice FUENTE y su fila del documento no lleva el enlace" % clave)
 
 
 def test_el_pie_es_el_que_dice_que_es_esto():
