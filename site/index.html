@@ -79,7 +79,7 @@
         </ol>
 
         <figure class="diagram">
-          <svg viewBox="0 0 760 220" role="img" aria-labelledby="diagram-title diagram-desc" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif">
+          <svg class="diagram-wide" viewBox="0 0 760 220" role="img" aria-labelledby="diagram-title diagram-desc" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif">
             <title id="diagram-title" data-es="Política de zonas de ClinicKeep" data-en="ClinicKeep zone policy">Política de zonas de ClinicKeep</title>
             <desc id="diagram-desc" data-es="Al caer la red se desconecta la zona C; si la autonomía baja de 6 horas se desconecta la zona B; la zona A nunca se corta por software." data-en="When the grid fails, zone C is disconnected; if autonomy falls below 6 hours, zone B is disconnected; zone A is never cut by software.">Al caer la red se desconecta la zona C; si la autonomía baja de 6 horas se desconecta la zona B; la zona A nunca se corta por software.</desc>
             <g fill="#8B6914" font-size="13" font-weight="700">
@@ -109,6 +109,38 @@
             <g fill="#8B6914">
               <path d="M272 110l-10-6v12z"/>
               <path d="M536 110l-10-6v12z"/>
+            </g>
+          </svg>
+          <svg class="diagram-narrow" viewBox="0 0 360 440" role="img" aria-labelledby="diagram-title-m diagram-desc-m" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif">
+            <title id="diagram-title-m" data-es="Política de zonas de ClinicKeep" data-en="ClinicKeep zone policy">Política de zonas de ClinicKeep</title>
+            <desc id="diagram-desc-m" data-es="Al caer la red se desconecta la zona C; si la autonomía baja de 6 horas se desconecta la zona B; la zona A nunca se corta por software." data-en="When the grid fails, zone C is disconnected; if autonomy falls below 6 hours, zone B is disconnected; zone A is never cut by software.">Al caer la red se desconecta la zona C; si la autonomía baja de 6 horas se desconecta la zona B; la zona A nunca se corta por software.</desc>
+            <g fill="#8B6914" font-size="12" font-weight="700">
+              <text x="20" y="24">01</text>
+              <text x="20" y="174">02</text>
+              <text x="20" y="324">03</text>
+            </g>
+            <g fill="#ffffff" stroke="#8B6914" stroke-width="2">
+              <rect x="20" y="34" width="320" height="90" rx="12"/>
+              <rect x="20" y="184" width="320" height="90" rx="12"/>
+              <rect x="20" y="334" width="320" height="90" rx="12"/>
+            </g>
+            <g fill="#111827" font-size="16" font-weight="600" text-anchor="middle">
+              <text x="180" y="72" data-es="Corte de red" data-en="Grid failure">Corte de red</text>
+              <text x="180" y="222" data-es="Autonomía &lt; 6 h" data-en="Autonomy &lt; 6 h">Autonomía &lt; 6 h</text>
+              <text x="180" y="372" data-es="Zona A protegida" data-en="Zone A protected">Zona A protegida</text>
+            </g>
+            <g fill="#4B5563" font-size="13" text-anchor="middle">
+              <text x="180" y="99" data-es="Zona C a los ~2 s" data-en="Zone C after ~2 s">Zona C a los ~2 s</text>
+              <text x="180" y="249" data-es="Zona B se abre" data-en="Zone B is shed">Zona B se abre</text>
+              <text x="180" y="399" data-es="Alarma con tiempo" data-en="Alarm with time left">Alarma con tiempo</text>
+            </g>
+            <g fill="none" stroke="#8B6914" stroke-width="2">
+              <path d="M180 124v24"/>
+              <path d="M180 274v24"/>
+            </g>
+            <g fill="#8B6914">
+              <path d="M180 154l-6-10h12z"/>
+              <path d="M180 304l-6-10h12z"/>
             </g>
           </svg>
           <figcaption data-es="La nevera de vacunas queda fuera de la lógica de corte por software." data-en="The vaccine fridge is outside the software shedding logic.">La nevera de vacunas queda fuera de la lógica de corte por software.</figcaption>
