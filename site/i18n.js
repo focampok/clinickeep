@@ -10,6 +10,8 @@
       "row-battery": "Battery",
       "row-power": "Fridge power",
       "row-without": "Without ClinicKeep",
+      "mark-assumed": "ASSUMED",
+      "mark-source": "SOURCE",
       computed: "computed",
       "computed-2": "computed",
       "computed-3": "computed",
@@ -52,7 +54,30 @@
       "p-hold": "The holdover is a single thermal mass, tau 4 h, an assumption, for a box without an ice lining. A PQS fridge with an ice lining holds for hours to days and needs less of this help. 7.5 °C, used as the model’s limit, is this project’s own margin under 8 °C. The PQS document gives the +2 to +8 °C band and measures holdover to +10 °C. It does not give 7.5. The 35 W figure cited for one AC vaccine fridge is WHO PQS E003-066, 0.85 kWh per 24 h. It is not the 8 W of the didactic demo.",
       "h-open": "The opening",
       "p-open": "The firmware is MicroPython on an ESP32, exercised in Wokwi. A switch stands in for the grid. A potentiometer stands in for a future power sensor on zone A. An OLED shows the state with no network. The public dashboard only displays what the device already decided. The calculator asks whether a battery and a charger cover the outage you type in, and it labels every input FUENTE or SUPUESTO.",
-      "p-limits": "ClinicKeep does not generate energy. It is not a certified medical device and it does not replace a cold-chain protocol. It does not use machine learning. A physical prototype is the next step. A district radio report over LoRaWAN is drawn as architecture only. It is not simulated, and it would report, not control."
+      "p-limits": "ClinicKeep does not generate energy. It is not a certified medical device and it does not replace a cold-chain protocol. It does not use machine learning. A physical prototype is the next step. A district radio report over LoRaWAN is drawn as architecture only. It is not simulated, and it would report, not control.",
+      "c-sw": "Grid switch",
+      "c-sw-p": "GPIO34 · 3V3 · GND",
+      "c-out": "Manual outage",
+      "c-out-p": "GPIO14 · GND · key G",
+      "c-pot": "Zone A power",
+      "c-pot-p": "GPIO35 · potentiometer, a stand-in",
+      "c-temp": "Fridge temperature",
+      "c-temp-p": "GPIO4 · DS18B20 · 4.7 kΩ to 3V3",
+      "c-k": "SIM clock",
+      "c-k-p": "GPIO13 · key K · 1, 60, or 600",
+      "c-bz": "Alarm",
+      "c-bz-p": "GPIO25 · buzzer",
+      "c-esp": "ESP32 DevKit C V4",
+      "c-norelay": "Zone A has no relay. The fridge stays closed.",
+      "c-rb": "Relay B · hallway",
+      "c-rb-p": "GPIO26 · NO contact to the green LED, 220 Ω",
+      "c-rc": "Relay C · waiting room",
+      "c-rc-p": "GPIO27 · NO contact to the yellow LED, 220 Ω",
+      "c-oled": "OLED",
+      "c-oled-p": "SDA GPIO21 · SCL GPIO22 · address 0x3C",
+      "c-cap": "The circuit running in Wokwi. Power and ground are shared. The potentiometer stands in for a future INA219 on zone A, which Wokwi does not include.",
+      "c-cirkit-alt": "Cirkit Designer schematic of the intended hardware: ESP32, two relays, LEDs, OLED, buzzer, and an INA219",
+      "c-cirkit": "Cirkit Designer drawing of the intended hardware. It adds an INA219 in series with zone A. Wokwi has no such part, so the simulation uses the potentiometer. This drawing is not a built prototype."
     },
     "es-419": {
       wordmark: "CLINICKEEP",
@@ -64,6 +89,8 @@
       "row-battery": "Batería",
       "row-power": "Potencia de la nevera",
       "row-without": "Sin ClinicKeep",
+      "mark-assumed": "SUPUESTO",
+      "mark-source": "FUENTE",
       computed: "calculado",
       "computed-2": "calculado",
       "computed-3": "calculado",
@@ -106,7 +133,30 @@
       "p-hold": "La retención es una sola masa térmica, tau 4 h, un supuesto, para una caja sin recubrimiento de hielo. Una nevera PQS con recubrimiento de hielo aguanta de horas a días y necesita menos de esta ayuda. 7.5 °C, usado como límite del modelo, es el margen propio de este proyecto bajo 8 °C. El documento PQS da la banda de +2 a +8 °C y mide la retención hasta +10 °C. No da 7.5. La cifra de 35 W citada para una nevera de vacunas de CA es WHO PQS E003-066, 0.85 kWh por 24 h. No son los 8 W de la demostración didáctica.",
       "h-open": "Lo que sigue abierto",
       "p-open": "El firmware es MicroPython en un ESP32, ejercido en Wokwi. Un interruptor representa la red. Un potenciómetro representa un futuro sensor de potencia en la zona A. Una OLED muestra el estado sin red. El tablero público solo muestra lo que el dispositivo ya decidió. La calculadora pregunta si una batería y un cargador cubren el corte que usted escribe, y marca cada entrada como FUENTE o SUPUESTO.",
-      "p-limits": "ClinicKeep no genera energía. No es un dispositivo médico certificado y no reemplaza un protocolo de cadena de frío. No usa aprendizaje automático. Un prototipo físico es el paso siguiente. Un reporte de radio distrital por LoRaWAN está dibujado solo como arquitectura. No está simulado, y reportaría, no controlaría."
+      "p-limits": "ClinicKeep no genera energía. No es un dispositivo médico certificado y no reemplaza un protocolo de cadena de frío. No usa aprendizaje automático. Un prototipo físico es el paso siguiente. Un reporte de radio distrital por LoRaWAN está dibujado solo como arquitectura. No está simulado, y reportaría, no controlaría.",
+      "c-sw": "Interruptor de red",
+      "c-sw-p": "GPIO34 · 3V3 · GND",
+      "c-out": "Corte manual",
+      "c-out-p": "GPIO14 · GND · tecla G",
+      "c-pot": "Potencia de la zona A",
+      "c-pot-p": "GPIO35 · potenciómetro, un sustituto",
+      "c-temp": "Temperatura de la nevera",
+      "c-temp-p": "GPIO4 · DS18B20 · 4.7 kΩ a 3V3",
+      "c-k": "Reloj SIM",
+      "c-k-p": "GPIO13 · tecla K · 1, 60 o 600",
+      "c-bz": "Alarma",
+      "c-bz-p": "GPIO25 · zumbador",
+      "c-esp": "ESP32 DevKit C V4",
+      "c-norelay": "La zona A no tiene relé. La nevera sigue cerrada.",
+      "c-rb": "Relé B · pasillo",
+      "c-rb-p": "GPIO26 · contacto NO al LED verde, 220 Ω",
+      "c-rc": "Relé C · sala de espera",
+      "c-rc-p": "GPIO27 · contacto NO al LED amarillo, 220 Ω",
+      "c-oled": "OLED",
+      "c-oled-p": "SDA GPIO21 · SCL GPIO22 · dirección 0x3C",
+      "c-cap": "El circuito que corre en Wokwi. La alimentación y la tierra son comunes. El potenciómetro sustituye a un futuro INA219 en la zona A, que Wokwi no incluye.",
+      "c-cirkit-alt": "Esquema de Cirkit Designer del hardware previsto: ESP32, dos relés, LEDs, OLED, zumbador y un INA219",
+      "c-cirkit": "Dibujo de Cirkit Designer del hardware previsto. Agrega un INA219 en serie con la zona A. Wokwi no tiene esa pieza, así que la simulación usa el potenciómetro. Este dibujo no es un prototipo construido."
     }
   };
 
@@ -121,7 +171,8 @@
     document.querySelectorAll("[data-i18n]").forEach(function (node) {
       var value = table[node.getAttribute("data-i18n")];
       if (value == null) return;
-      if (value.indexOf("<br>") !== -1) node.innerHTML = value;
+      if (node.tagName === "IMG") node.alt = value;
+      else if (value.indexOf("<br>") !== -1) node.innerHTML = value;
       else node.textContent = value;
     });
     buttons.en.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
