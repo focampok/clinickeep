@@ -1,0 +1,134 @@
+(function () {
+  var copy = {
+    en: {
+      wordmark: "CLINICKEEP",
+      subtitle: "PERFORMANCE SPECIFICATION · SIMULATED PROTOTYPE",
+      disclaimer: "Not a certified device. Simulated. Does not generate energy.",
+      "th-item": "ITEM",
+      "th-value": "VALUE",
+      "th-mark": "MARK",
+      "row-battery": "Battery",
+      "row-power": "Fridge power",
+      "row-without": "Without ClinicKeep",
+      computed: "computed",
+      "computed-2": "computed",
+      "computed-3": "computed",
+      "row-with": "With ClinicKeep",
+      "row-tau": "Holdover model, tau",
+      "row-gt": "Guatemala outages, 1.3 per month, firms, 2017",
+      "row-gt-v": "1.3 per month",
+      "row-zero": "Improvement",
+      "row-zero-v": "0% when non-critical load is 0%",
+      "cap-a": "A 8 W<br>VACCINE FRIDGE",
+      "cap-b": "B 4 W<br>HALLWAY LAMP",
+      "cap-c": "C 3 W<br>WAITING-ROOM LAMP",
+      demo: "Open the simulated demo →",
+      calc: "Open the sizing calculator →",
+      repo: "Read the repository →",
+      "h-outage": "The outage",
+      "p-outage": "A health post that loses the grid still has to keep vaccines between +2 and +8 °C. Guatemala averaged 1.3 outages a month in 2017. That figure is from the World Bank Enterprise Surveys, firms, not clinics, and it does not say how long the outages lasted.",
+      "h-policy": "The policy",
+      "p-policy": "ClinicKeep decides on the device, in the same policy module that runs on the ESP32 and in the scenario engine. The network only reports. Zone A, the vaccine fridge, is never opened by software. About two seconds after the grid fails, only zone C, the waiting room, opens. Zone B, the hallway lights, opens later, when total autonomy falls under 6 hours. That threshold is a starting assumption. Once B opens, it stays open until the grid returns.",
+      "p-safe": "Safe time is the fridge’s remaining autonomy plus a thermal holdover, on the same clock, said as a duration: move the vaccines in X h Y min. A failed temperature sensor removes the holdover only. A failed power sensor while the grid is down opens B and C and keeps A.",
+      "th-state": "State",
+      "th-when": "When",
+      "th-does": "What it does",
+      "st-n": "Grid present and stable for 5 s",
+      "st-nd": "A, B, and C closed",
+      "st-c": "Grid absent for 2 s",
+      "st-cd": "C opens. Energy accounting starts",
+      "st-a": "Total autonomy under 6 h",
+      "st-ad": "B opens. A stays closed",
+      "st-k": "Safe time under 1 h",
+      "st-kd": "Alarm: move the vaccines in the time that remains",
+      "st-r": "Grid stable again",
+      "st-rd": "B closes, then C, 3 s later",
+      "st-f": "Power readings fail",
+      "st-fd": "With the grid down: open B and C, keep A",
+      "p-sim": "The timers above are real seconds. The energy uses a simulated clock, badged SIM ×k, at 1, 60, or 600. The badge stays visible because the hours are not a wall-clock measurement.",
+      "h-evidence": "What the same battery does",
+      "p-demo": "The didactic demo assumes 96 Wh, A at 8 W, B at 4 W, C at 3 W, and a holdover of about 0.53 h. The fridge runs out of energy at 6.4 h without ClinicKeep and at 11.0 h with it. With the holdover added, protected hours are 6.9 h and 11.5 h. That gain needs non-critical load. At 0% non-critical load the improvement is 0%.",
+      "p-s2": "Across 408 rows of the didactic sweep, the mean improvement is about +51%, from 0% up to about +373% in the extreme cell. A second sweep, one outage a day, shows that recharging barely depends on ClinicKeep. It depends on how long the outage is and how large the charger is.",
+      "p-hold": "The holdover is a single thermal mass, tau 4 h, an assumption, for a box without an ice lining. A PQS fridge with an ice lining holds for hours to days and needs less of this help. 7.5 °C, used as the model’s limit, is this project’s own margin under 8 °C. The PQS document gives the +2 to +8 °C band and measures holdover to +10 °C. It does not give 7.5. The 35 W figure cited for one AC vaccine fridge is WHO PQS E003-066, 0.85 kWh per 24 h. It is not the 8 W of the didactic demo.",
+      "h-open": "The opening",
+      "p-open": "The firmware is MicroPython on an ESP32, exercised in Wokwi. A switch stands in for the grid. A potentiometer stands in for a future power sensor on zone A. An OLED shows the state with no network. The public dashboard only displays what the device already decided. The calculator asks whether a battery and a charger cover the outage you type in, and it labels every input FUENTE or SUPUESTO.",
+      "p-limits": "ClinicKeep does not generate energy. It is not a certified medical device and it does not replace a cold-chain protocol. It does not use machine learning. A physical prototype is the next step. A district radio report over LoRaWAN is drawn as architecture only. It is not simulated, and it would report, not control."
+    },
+    "es-419": {
+      wordmark: "CLINICKEEP",
+      subtitle: "ESPECIFICACIÓN DE DESEMPEÑO · PROTOTIPO SIMULADO",
+      disclaimer: "No es un dispositivo certificado. Simulado. No genera energía.",
+      "th-item": "ÍTEM",
+      "th-value": "VALOR",
+      "th-mark": "MARCA",
+      "row-battery": "Batería",
+      "row-power": "Potencia de la nevera",
+      "row-without": "Sin ClinicKeep",
+      computed: "calculado",
+      "computed-2": "calculado",
+      "computed-3": "calculado",
+      "row-with": "Con ClinicKeep",
+      "row-tau": "Retención térmica, tau",
+      "row-gt": "Cortes en Guatemala, 1.3 al mes, empresas, 2017",
+      "row-gt-v": "1.3 al mes",
+      "row-zero": "Mejora",
+      "row-zero-v": "0% cuando la carga no crítica es 0%",
+      "cap-a": "A 8 W<br>NEVERA DE VACUNAS",
+      "cap-b": "B 4 W<br>LÁMPARA DE PASILLO",
+      "cap-c": "C 3 W<br>LÁMPARA DE SALA DE ESPERA",
+      demo: "Abrir la demostración simulada →",
+      calc: "Abrir la calculadora de dimensionamiento →",
+      repo: "Leer el repositorio →",
+      "h-outage": "El corte",
+      "p-outage": "Un puesto de salud que pierde la red tiene que mantener las vacunas entre +2 y +8 °C. Guatemala promedió 1.3 cortes al mes en 2017. Esa cifra viene de las Enterprise Surveys del Banco Mundial, de empresas, no de clínicas, y no dice cuánto duraron los cortes.",
+      "h-policy": "La política",
+      "p-policy": "ClinicKeep decide en el dispositivo, en el mismo módulo de política que corre en el ESP32 y en el motor de escenarios. La red solo informa. La zona A, la nevera de vacunas, el software no la abre nunca. Unos dos segundos después de que falla la red, solo se abre la zona C, la sala de espera. La zona B, las luces del pasillo, se abre después, cuando la autonomía total baja de 6 horas. Ese umbral es un supuesto de partida. Una vez que B se abre, permanece abierta hasta que vuelve la red.",
+      "p-safe": "El tiempo seguro es la autonomía que le queda a la nevera más una retención térmica, en el mismo reloj, dicha como duración: mueva las vacunas en X h Y min. Un sensor de temperatura fallido quita solo la retención. Un sensor de potencia fallido con la red caída abre B y C y mantiene A.",
+      "th-state": "Estado",
+      "th-when": "Cuándo",
+      "th-does": "Qué hace",
+      "st-n": "Red presente y estable durante 5 s",
+      "st-nd": "A, B y C cerradas",
+      "st-c": "Red ausente durante 2 s",
+      "st-cd": "C se abre. Empieza el conteo de energía",
+      "st-a": "Autonomía total menor a 6 h",
+      "st-ad": "B se abre. A permanece cerrada",
+      "st-k": "Tiempo seguro menor a 1 h",
+      "st-kd": "Alarma: mueva las vacunas en el tiempo que queda",
+      "st-r": "Red estable de nuevo",
+      "st-rd": "B se cierra, luego C, 3 s después",
+      "st-f": "Fallan las lecturas de potencia",
+      "st-fd": "Con la red caída: abrir B y C, mantener A",
+      "p-sim": "Los temporizadores de arriba son segundos reales. La energía usa un reloj simulado, con la etiqueta SIM ×k, en 1, 60 o 600. La etiqueta permanece visible porque las horas no son una medición de reloj de pared.",
+      "h-evidence": "Lo que hace la misma batería",
+      "p-demo": "La demostración didáctica supone 96 Wh, A a 8 W, B a 4 W, C a 3 W y una retención de cerca de 0.53 h. La nevera se queda sin energía a las 6.4 h sin ClinicKeep y a las 11.0 h con ClinicKeep. Con la retención sumada, las horas protegidas son 6.9 h y 11.5 h. Esa ganancia necesita carga no crítica. Con 0% de carga no crítica la mejora es 0%.",
+      "p-s2": "En 408 filas del barrido didáctico, la mejora media es de cerca de +51%, desde 0% hasta cerca de +373% en la celda extrema. Un segundo barrido, un corte al día, muestra que la recarga casi no depende de ClinicKeep. Depende de cuánto dura el corte y de qué tamaño es el cargador.",
+      "p-hold": "La retención es una sola masa térmica, tau 4 h, un supuesto, para una caja sin recubrimiento de hielo. Una nevera PQS con recubrimiento de hielo aguanta de horas a días y necesita menos de esta ayuda. 7.5 °C, usado como límite del modelo, es el margen propio de este proyecto bajo 8 °C. El documento PQS da la banda de +2 a +8 °C y mide la retención hasta +10 °C. No da 7.5. La cifra de 35 W citada para una nevera de vacunas de CA es WHO PQS E003-066, 0.85 kWh por 24 h. No son los 8 W de la demostración didáctica.",
+      "h-open": "Lo que sigue abierto",
+      "p-open": "El firmware es MicroPython en un ESP32, ejercido en Wokwi. Un interruptor representa la red. Un potenciómetro representa un futuro sensor de potencia en la zona A. Una OLED muestra el estado sin red. El tablero público solo muestra lo que el dispositivo ya decidió. La calculadora pregunta si una batería y un cargador cubren el corte que usted escribe, y marca cada entrada como FUENTE o SUPUESTO.",
+      "p-limits": "ClinicKeep no genera energía. No es un dispositivo médico certificado y no reemplaza un protocolo de cadena de frío. No usa aprendizaje automático. Un prototipo físico es el paso siguiente. Un reporte de radio distrital por LoRaWAN está dibujado solo como arquitectura. No está simulado, y reportaría, no controlaría."
+    }
+  };
+
+  var buttons = {
+    en: document.getElementById("lang-en"),
+    "es-419": document.getElementById("lang-es")
+  };
+
+  function apply(lang) {
+    var table = copy[lang];
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach(function (node) {
+      var value = table[node.getAttribute("data-i18n")];
+      if (value == null) return;
+      if (value.indexOf("<br>") !== -1) node.innerHTML = value;
+      else node.textContent = value;
+    });
+    buttons.en.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
+    buttons["es-419"].setAttribute("aria-pressed", lang === "es-419" ? "true" : "false");
+    document.querySelector(".lang").setAttribute("aria-label", lang === "en" ? "Language" : "Idioma");
+  }
+
+  buttons.en.addEventListener("click", function () { apply("en"); });
+  buttons["es-419"].addEventListener("click", function () { apply("es-419"); });
+})();
