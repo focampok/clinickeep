@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ClinicKeep - calculadora de dimensionamiento (simulación)</title>
-<meta name="description" content="Calculadora estática: cuántas horas protege la nevera con y sin ClinicKeep, y si alcanzan la batería y el cargador. Todo con supuestos.">
+<title>ClinicKeep — sizing calculator (simulation)</title>
+<meta name="description" content="Static calculator: how many hours the fridge stays protected with and without ClinicKeep, and whether the battery and the charger are enough. Assumptions are labeled.">
 <style>
   /* Tema claro por defecto; oscuro con prefers-color-scheme. Misma paleta que
      el dashboard (server/static/index.html), con contraste AA en ambos temas. */
@@ -61,16 +61,22 @@
     margin: 0;
     padding: .6rem 1rem;
     background: var(--panel-2);
-    border-top: 3px solid var(--warn);
     border-bottom: 1px solid var(--line);
     font-weight: 700; letter-spacing: .04em; font-size: .85rem;
   }
   .banner span { font-weight: 400; color: var(--muted); letter-spacing: 0; }
 
   header { padding: 1rem 1rem .5rem; }
-  header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .01em; }
-  header .sub { margin: .25rem 0 0; color: var(--muted); font-size: .92rem; max-width: 60ch; }
-  header .volver { font-size: .85rem; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 1.85rem; letter-spacing: .01em; line-height: 1.15; }
+  header .sub { margin: .35rem 0 0; color: var(--muted); font-size: .92rem; max-width: 60ch; }
+  header .volver { font-size: .85rem; margin: 0 0 .35rem; }
+  .lang { display: flex; flex: 0 0 auto; gap: .35rem; }
+  .lang button {
+    min-width: 44px; min-height: 44px; padding: .4rem .7rem;
+    border-radius: .45rem; box-shadow: none;
+  }
+  .lang button[aria-pressed="true"] { color: var(--text); background: var(--bg); }
 
   main { padding: 0 1rem 2rem; max-width: 1200px; }
   .col-form, .col-resultados { min-width: 0; }
@@ -117,8 +123,8 @@
   /* El enlace de una fuente verificada: URL visible (se lee entera, sin
      "ver más") y detras la salvedad de lo que dice el documento. */
   .fuente {
-    margin: .3rem 0 0; padding-left: .5rem; font-size: .74rem; line-height: 1.35;
-    color: var(--muted); border-left: 2px solid var(--ok); overflow-wrap: anywhere;
+    margin: .3rem 0 0; padding: .35rem .5rem; font-size: .74rem; line-height: 1.35;
+    color: var(--muted); border: 1px solid var(--line); border-radius: .3rem; overflow-wrap: anywhere;
   }
   .fuente a { font-weight: 600; }
   .campo select {
@@ -130,7 +136,7 @@
   .acciones { display: flex; flex-wrap: wrap; gap: .5rem; margin: .25rem 0 1.25rem; }
   button, .boton {
     font: inherit; font-weight: 600; cursor: pointer;
-    padding: .5rem .85rem; border-radius: .45rem;
+    min-height: 44px; padding: .5rem .85rem; border-radius: .45rem;
     color: var(--text); background: var(--panel-2);
     border: 1px solid var(--line); box-shadow: var(--shadow);
     text-decoration: none; display: inline-block;
@@ -141,7 +147,7 @@
   #errores, #aviso-modulo { margin: 0 0 1rem; padding: .7rem .9rem;
     background: var(--panel); border: 2px solid var(--danger); border-radius: .6rem; }
   #errores[hidden], #aviso-modulo[hidden] { display: none; }
-  #errores h2, #aviso-modulo h2 { margin: 0 0 .4rem; font-size: 1rem; }
+  #errores h2, #aviso-modulo h2 { margin: 0 0 .4rem; font-size: 1.35rem; }
   #errores ul { margin: 0; padding-left: 1.1rem; }
   #aviso-modulo p { margin: 0 0 .3rem; font-size: .9rem; }
   #aviso-modulo code { background: var(--panel-2); padding: 0 .25rem; border-radius: .2rem; }
@@ -158,7 +164,7 @@
   .desglose li { display: flex; justify-content: space-between; gap: .6rem; border-top: 1px dotted var(--line); padding: .18rem 0; }
   .desglose li span:last-child { white-space: nowrap; }
   .nota-card { margin: .5rem 0 0; font-size: .8rem; color: var(--muted); }
-  #resultados h2 { margin: .5rem 0 .6rem; font-size: 1.05rem; }
+  #resultados h2 { margin: .5rem 0 .6rem; font-size: 1.35rem; }
 
   .estado { display: flex; gap: .5rem; align-items: flex-start; }
   .estado svg { flex: 0 0 auto; margin-top: .1rem; }
@@ -174,7 +180,7 @@
      forro de hielo. Se ve siempre, tambien sin JavaScript. */
   .aviso-holdover {
     margin: 0 0 .75rem; padding: .55rem .7rem; font-size: .85rem; line-height: 1.4;
-    background: var(--panel-2); border-left: 3px solid var(--warn); border-radius: .3rem;
+    background: var(--panel-2); border: 1px solid var(--warn); border-radius: .3rem;
     max-width: 70ch;
   }
 
@@ -185,29 +191,35 @@
   footer p { margin: 0 0 .3rem; max-width: 70ch; }
   footer strong { color: var(--text); }
   @media (max-width: 380px) {
-    header h1 { font-size: 1.2rem; }
+    header h1 { font-size: 1.75rem; }
     .campos { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
-<a class="saltar" href="#formulario">Saltar al formulario</a>
+<a class="saltar" href="#formulario" data-i18n="skip">Skip to the form</a>
 
-<p class="banner" role="note">SIMULACIÓN
-  <span>— resultados de un modelo con supuestos, no de una instalación real ni de datos medidos.</span>
+<p class="banner" role="note"><span data-i18n="banner-k">SIMULATION</span>
+  <span data-i18n="banner-s">— results from a model with assumptions, not from a real installation or measured data.</span>
 </p>
 
 <header>
-  <p class="volver"><a href="../">← Volver al panel</a></p>
-  <h1>¿Cuántas horas protege la nevera?</h1>
-  <p class="sub">Con los consumos de la clínica y la batería que tenga (o piense poner),
-    cuánto aguanta la nevera durante un corte <strong>sin</strong> y <strong>con</strong> ClinicKeep,
-    y si alcanzan la batería y el cargador.</p>
+  <div class="top">
+    <div>
+      <p class="volver"><a href="../" data-i18n="back">← Back to the panel</a></p>
+      <h1 data-i18n="h1">How many hours does the fridge stay protected?</h1>
+      <p class="sub" data-i18n="sub">From the clinic’s loads and the battery it has, or the one being considered: how long the fridge lasts through an outage without and with ClinicKeep, and whether the battery and the charger are enough.</p>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" id="lang-en" aria-pressed="true" lang="en">EN</button>
+      <button type="button" id="lang-es" aria-pressed="false" lang="es-419">ES</button>
+    </div>
+  </div>
 </header>
 
 <main>
-  <noscript><p class="banner" role="note">SIN JAVASCRIPT
-    <span>— esta calculadora se calcula en el navegador: actívalo para ver los resultados.</span></p></noscript>
+  <noscript><p class="banner" role="note">NO JAVASCRIPT
+    <span>— this calculator runs in the browser: turn it on to see the results.</span></p></noscript>
   <div class="col-form">
   <form id="formulario" novalidate>
     <!-- Los campos los pinta el script desde calc.js: así los valores por
@@ -215,9 +227,9 @@
   </form>
 
   <p class="acciones">
-    <button type="button" id="btn-copiar">Copiar resumen</button>
-    <a class="boton" id="btn-csv" href="#" download="clinickeep-calculadora.csv">Descargar CSV</a>
-    <button type="button" id="btn-reset">Restablecer supuestos por defecto</button>
+    <button type="button" id="btn-copiar" data-i18n="copy">Copy summary</button>
+    <a class="boton" id="btn-csv" href="#" download="clinickeep-calculadora.csv" data-i18n="csv">Download CSV</a>
+    <button type="button" id="btn-reset" data-i18n="reset">Restore default assumptions</button>
   </p>
   <p id="estado-copia" role="status" aria-live="polite"></p>
   </div>
@@ -225,32 +237,26 @@
   <div class="col-resultados">
 
   <div id="errores" role="alert" hidden>
-    <h2>Revisa estos campos</h2>
+    <h2 data-i18n="err-h">Check these fields</h2>
     <ul id="lista-errores"></ul>
   </div>
 
   <div id="aviso-modulo" role="alert" hidden>
-    <h2>No se pudo cargar calc.js</h2>
-    <p>Los módulos de JavaScript no se cargan abriendo el archivo directamente
-      (<code>file://</code>): el navegador los bloquea por seguridad. Sirve esta carpeta
-      por HTTP —por ejemplo <code>python3 -m http.server</code> dentro de <code>calc/</code>—
-      o entra por <code>/calc</code> del panel.</p>
+    <h2 data-i18n="mod-h">Could not load calc.js</h2>
+    <p data-i18n="mod-p">JavaScript modules do not load when the file is opened directly (file://): the browser blocks them. Serve this folder over HTTP — for example python3 -m http.server inside calc/ — or open /calc on the panel.</p>
   </div>
 
   <section id="resultados" aria-live="polite" aria-labelledby="titulo-resultados">
-    <h2 id="titulo-resultados">Resultados</h2>
-    <p class="aviso-holdover" role="note" id="nota-holdover">Aplica a neveras sin forro de hielo (holdover corto). Las neveras PQS con forro de hielo tienen un holdover de horas a días y necesitan menos ayuda.</p>
+    <h2 id="titulo-resultados" data-i18n="results">Results</h2>
+    <p class="aviso-holdover" role="note" id="nota-holdover" data-i18n="holdover">Applies to fridges without an ice lining (short holdover). PQS fridges with an ice lining hold for hours to days and need less of this help.</p>
     <div class="grid" id="tarjetas"></div>
   </section>
   </div>
 </main>
 
 <footer>
-  <p><strong>Análisis de sensibilidad con supuestos; no es predicción de cortes ni datos medidos</strong></p>
-  <p>Las fórmulas son las mismas que usa el firmware: <code>policy.py</code> (holdover) y la
-    forma cerrada que valida <code>tests/test_scenarios.py</code>. Los valores por defecto
-    llevan su etiqueta al lado del campo, y los que no tienen fuente están listados en
-    <code>docs/FUENTES_PENDIENTES.md</code>.</p>
+  <p><strong data-i18n="pie">Sensitivity analysis with assumptions; not an outage forecast and not measured data</strong></p>
+  <p data-i18n="pie-2">The formulas are the same ones the firmware uses: policy.py (holdover) and the closed form checked by tests/test_scenarios.py. Each default carries its mark beside the field. The ones without a source are listed in docs/FUENTES_PENDIENTES.md.</p>
 </footer>
 
 <script>
@@ -269,6 +275,135 @@ setTimeout(function () {
 import { DEFAULTS, GRUPOS, MAX_H, ETIQUETAS, PIE, NOTA_HOLDOVER, PERFILES,
          PERFIL_DEFECTO, camposDePerfil, valoresDePerfil, energiaUtilWh,
          normalizarEntradas, validarCoherencia, simular } from "./calc.js";
+
+/* Inglés al abrir, español latinoamericano al pulsar ES. No se guarda:
+   recargar vuelve a inglés, igual que la landing. */
+let lang = "en";
+let conservados = null;
+const PIE_MARCADO_ES = "<strong>Análisis de sensibilidad con supuestos; no es predicción de cortes ni datos medidos</strong>";
+const COPY = {
+  en: {
+    title: "ClinicKeep — sizing calculator (simulation)",
+    desc: "Static calculator: how many hours the fridge stays protected with and without ClinicKeep, and whether the battery and the charger are enough. Assumptions are labeled.",
+    skip: "Skip to the form",
+    "banner-k": "SIMULATION",
+    "banner-s": "— results from a model with assumptions, not from a real installation or measured data.",
+    back: "← Back to the panel",
+    h1: "How many hours does the fridge stay protected?",
+    sub: "From the clinic’s loads and the battery it has, or the one being considered: how long the fridge lasts through an outage without and with ClinicKeep, and whether the battery and the charger are enough.",
+    copy: "Copy summary",
+    csv: "Download CSV",
+    reset: "Restore default assumptions",
+    "err-h": "Check these fields",
+    "mod-h": "Could not load calc.js",
+    "mod-p": "JavaScript modules do not load when the file is opened directly (file://): the browser blocks them. Serve this folder over HTTP — for example python3 -m http.server inside calc/ — or open /calc on the panel.",
+    results: "Results",
+    holdover: "Applies to fridges without an ice lining (short holdover). PQS fridges with an ice lining hold for hours to days and need less of this help.",
+    pie: "Sensitivity analysis with assumptions; not an outage forecast and not measured data",
+    "pie-2": "The formulas are the same ones the firmware uses: policy.py (holdover) and the closed form checked by tests/test_scenarios.py. Each default carries its mark beside the field. The ones without a source are listed in docs/FUENTES_PENDIENTES.md.",
+    "profile-legend": "Assumption profile",
+    profile: "Profile ",
+  },
+  "es-419": {
+    title: "ClinicKeep — calculadora de dimensionamiento (simulación)",
+    desc: "Calculadora estática: cuántas horas protege la nevera con y sin ClinicKeep, y si alcanzan la batería y el cargador. Todo con supuestos.",
+    skip: "Saltar al formulario",
+    "banner-k": "SIMULACIÓN",
+    "banner-s": "— resultados de un modelo con supuestos, no de una instalación real ni de datos medidos.",
+    back: "← Volver al panel",
+    h1: "¿Cuántas horas protege la nevera?",
+    sub: "Con los consumos de la clínica y la batería que tenga, o la que se esté considerando: cuánto aguanta la nevera durante un corte sin y con ClinicKeep, y si alcanzan la batería y el cargador.",
+    copy: "Copiar resumen",
+    csv: "Descargar CSV",
+    reset: "Restablecer supuestos por defecto",
+    "err-h": "Revisa estos campos",
+    "mod-h": "No se pudo cargar calc.js",
+    "mod-p": "Los módulos de JavaScript no se cargan abriendo el archivo directamente (file://): el navegador los bloquea. Sirve esta carpeta por HTTP — por ejemplo python3 -m http.server dentro de calc/ — o entra por /calc del panel.",
+    results: "Resultados",
+    holdover: "Aplica a neveras sin forro de hielo (holdover corto). Las neveras PQS con forro de hielo tienen un holdover de horas a días y necesitan menos ayuda.",
+    pie: PIE,
+    "pie-2": "Las fórmulas son las mismas que usa el firmware: policy.py (holdover) y la forma cerrada que valida tests/test_scenarios.py. Los valores por defecto llevan su etiqueta al lado del campo, y los que no tienen fuente están listados en docs/FUENTES_PENDIENTES.md.",
+    "profile-legend": "Perfil de supuestos",
+    profile: "Perfil ",
+  },
+};
+const EN_CAMPO = {
+  a_w: { nombre: "Vaccine fridge (zone A)", unidad: "W", nota: "Average fridge power. With ClinicKeep, software never opens it." },
+  b_w: { nombre: "Hallway lights (zone B)", unidad: "W", nota: "Opens on its own in AHORRO when the outage runs long and total autonomy falls below the reserve." },
+  c_w: { nombre: "Waiting room (zone C)", unidad: "W", nota: "The first load to open: it opens once the outage is confirmed." },
+  nominal_wh: { nombre: "Nominal battery", unidad: "Wh", nota: "Pack capacity. With the depth below, this is the 96 Wh usable in config.py." },
+  dod_pct: { nombre: "Usable depth of discharge", unidad: "%", nota: "How much of the capacity can be used without shortening battery life." },
+  ciclos: { nombre: "Battery cycle life", unidad: "cycles", nota: "Full cycles the battery is rated for. The calculation assumes one cycle per outage." },
+  cortes_mes: { nombre: "Outages per month", unidad: "outages/month", nota: "How many outages a month at the site. The source is a country average (not a site series, and it does not say how long they last)." },
+  d_h: { nombre: "Outage length to cover", unidad: "h", nota: "The policy sets the reserve (T_RESERVA_H) equal to this length." },
+  cargador_w: { nombre: "Charger power", unidad: "W", nota: "Compared with the energy that must be put back during grid hours." },
+  eta: { nombre: "Charge efficiency", unidad: "0 to 1", nota: "How much of what the charger delivers reaches the battery." },
+  t_amb_c: { nombre: "Ambient temperature", unidad: "°C", nota: "The hotter it is, the shorter the holdover: the box warms sooner." },
+  tau_h: { nombre: "Fridge time constant", unidad: "h", nota: "How long the fridge takes to warm up. From a datasheet; it has not been measured." },
+  t_hi_c: { nombre: "Temperature when A loses power", unidad: "°C", nota: "Top of the control band: the box temperature when the grid fails." },
+  t_lim_c: { nombre: "Fridge safe limit", unidad: "°C", nota: "7.5 °C is not from the datasheet: it is the 8 °C top of the vaccine band minus a sensor margin." },
+};
+const EN_NOTA_PERFIL = {
+  a_w: "Average fridge power: 0.85 kWh/24 h continuous on the PQS sheet is about 35 W.",
+  b_w: "ASSUMED, still to measure: the hallway lights of a clinic with this fridge.",
+  c_w: "ASSUMED, still to measure: the waiting room of that same clinic.",
+  nominal_wh: "At 75% depth this is 300 Wh usable, inside the PQS range of 200 to 2000 Wh.",
+};
+const EN_GRUPO = {
+  cargas: "Clinic loads",
+  bateria: "Battery and backup",
+  red: "Outage and recharge",
+  termico: "Fridge (thermal model)",
+};
+const EN_FUENTE = {
+  "https://extranet.who.int/prequal/sites/default/files/immunization_devices/pdf/e003/E003-066.pdf": "0.85 kWh/24 h continuous ≈ 35 W; one AC model.",
+  "https://extranet.who.int/prequal/key-resources/documents/pqs-performance-specification-e003rf021-refrigerator-or-combined": "Vaccines +2 to +8 °C; PQS holdover is measured up to +10 °C; 7.5 °C is our margin.",
+  "https://www.indexmundi.com/facts/indicators/IC.ELC.OUTG/rankings/central-america": "Guatemala, 1.3 outages/month, 2017, firms (World Bank Enterprise Surveys); no duration.",
+};
+const EN_PERFIL = { didactico: "Didactic (demo)", pqs_ref: "PQS reference" };
+const EN_ETIQUETA = {
+  didactico: "didactic demo profile; it does not represent a PQS fridge",
+  pqs_ref: "PQS reference profile (E003-066, 0.85 kWh/24 h); B and C still to measure",
+};
+
+function t(clave) {
+  const tabla = COPY[lang] || COPY.en;
+  return tabla[clave] != null ? tabla[clave] : COPY.en[clave];
+}
+function es() { return lang === "es-419"; }
+function nombreDe(clave, meta) {
+  return es() ? meta.nombre : ((EN_CAMPO[clave] && EN_CAMPO[clave].nombre) || meta.nombre);
+}
+function unidadDe(clave, meta) {
+  return es() ? meta.unidad : ((EN_CAMPO[clave] && EN_CAMPO[clave].unidad) || meta.unidad);
+}
+function notaDe(clave, meta) {
+  if (es()) return meta.nota;
+  if (meta.nota !== DEFAULTS[clave].nota && EN_NOTA_PERFIL[clave]) return EN_NOTA_PERFIL[clave];
+  return (EN_CAMPO[clave] && EN_CAMPO[clave].nota) || meta.nota;
+}
+function marcaDe(etiqueta) {
+  if (es()) return etiqueta;
+  if (etiqueta === ETIQUETAS.POR_CITAR) return "ASSUMED — to cite";
+  if (etiqueta === ETIQUETAS.FUENTE) return "SOURCE";
+  if (etiqueta === ETIQUETAS.SUPUESTO) return "ASSUMED";
+  return etiqueta;
+}
+function applyChrome() {
+  document.documentElement.lang = lang;
+  document.title = t("title");
+  const desc = document.querySelector('meta[name="description"]');
+  if (desc) desc.setAttribute("content", t("desc"));
+  document.querySelectorAll("[data-i18n]").forEach(function (node) {
+    const value = t(node.getAttribute("data-i18n"));
+    if (value == null) return;
+    node.textContent = value;
+  });
+  document.getElementById("lang-en").setAttribute("aria-pressed", lang === "en" ? "true" : "false");
+  document.getElementById("lang-es").setAttribute("aria-pressed", lang === "es-419" ? "true" : "false");
+  const grupo = document.querySelector(".lang");
+  if (grupo) grupo.setAttribute("aria-label", es() ? "Idioma" : "Language");
+}
 
 // --- iconos: siempre acompañan a un texto, nunca lo sustituyen ---------------
 const SVG = (cuerpo) =>
@@ -289,10 +424,23 @@ function n2(x) { return Number(x).toFixed(2); }
 /* Entero o decimal corto, sin los ceros de cola ni el ruido de la coma flotante
  * (1.3 cortes/mes son 15.6 al año, no 15.600000000000001). */
 function nCorto(x) { return String(Number(Number(x).toFixed(2))); }
-function horas(x) { return Number(x) >= MAX_H ? MAX_H + " <span class=\"unit\">h o más (tope)</span>" : n1(x) + " <span class=\"unit\">h</span>"; }
+function horas(x) {
+  const tope = es() ? "h o más (tope)" : "h or more (cap)";
+  return Number(x) >= MAX_H ? MAX_H + " <span class=\"unit\">" + tope + "</span>" : n1(x) + " <span class=\"unit\">h</span>";
+}
 
 function textoCobertura(res, d_h) {
   const c = res.cobertura;
+  if (!es()) {
+    if (c.estado === 2) return { clase: "ok", icono: ICONO.ok, titulo: "Yes: it covers the outage with and without ClinicKeep",
+      detalle: "The " + n1(res.sin.protegidas_h) + " h protected without ClinicKeep already reach the " + n1(d_h) + " h outage." };
+    if (c.estado === 1) return { clase: "aviso", icono: ICONO.aviso, titulo: "Yes, but only with ClinicKeep",
+      detalle: "Without ClinicKeep it only reaches " + n1(res.sin.protegidas_h) + " h of the " + n1(d_h) +
+               " h. With ClinicKeep, " + n1(res.con.protegidas_h) + " h." };
+    return { clase: "no", icono: ICONO.no, titulo: "No: it does not cover the outage even with ClinicKeep",
+      detalle: "With ClinicKeep it reaches " + n1(res.con.protegidas_h) + " h of the " + n1(d_h) +
+               " h. It needs more battery or less load." };
+  }
   if (c.estado === 2) return { clase: "ok", icono: ICONO.ok, titulo: "Sí: cubre el corte con y sin ClinicKeep",
     detalle: "Las " + n1(res.sin.protegidas_h) + " h protegidas sin ClinicKeep ya llegan a las " + n1(d_h) + " h del corte." };
   if (c.estado === 1) return { clase: "aviso", icono: ICONO.aviso, titulo: "Sí, pero solo con ClinicKeep",
@@ -305,9 +453,22 @@ function textoCobertura(res, d_h) {
 
 function textoRecarga(entradas, res) {
   const r = res.recarga;
-  const detalleNecesaria = "Reponer " + n1(res.con.e_repuesta_wh) + " Wh (energía del corte / " +
-    n2(entradas.eta) + " de eficiencia) y el cargador da " + n1(r.disponible_wh) + " Wh en las " +
-    n1(res.t_red_h) + " h de red.";
+  const detalleNecesaria = es()
+    ? "Reponer " + n1(res.con.e_repuesta_wh) + " Wh (energía del corte / " +
+      n2(entradas.eta) + " de eficiencia) y el cargador da " + n1(r.disponible_wh) + " Wh en las " +
+      n1(res.t_red_h) + " h de red."
+    : "Put back " + n1(res.con.e_repuesta_wh) + " Wh (outage energy / " +
+      n2(entradas.eta) + " efficiency) and the charger supplies " + n1(r.disponible_wh) + " Wh in the " +
+      n1(res.t_red_h) + " h of grid.";
+  if (!es()) {
+    if (r.estado === 2) return { clase: "ok", icono: ICONO.ok, titulo: "Yes: it recharges with and without ClinicKeep", detalle: detalleNecesaria };
+    if (r.estado === 1) return { clase: "aviso", icono: ICONO.aviso, titulo: "Yes, but only with ClinicKeep", detalle: detalleNecesaria };
+    const minimo = res.t_red_h > 0 ? res.con.e_repuesta_wh / res.t_red_h : Infinity;
+    return { clase: "no", icono: ICONO.no, titulo: "No: it does not recharge even with ClinicKeep",
+      detalle: detalleNecesaria + (Number.isFinite(minimo)
+        ? " It would need a charger of " + n1(minimo) + " W or more."
+        : " There is no grid time left to recharge.") };
+  }
   if (r.estado === 2) return { clase: "ok", icono: ICONO.ok, titulo: "Sí: recarga con y sin ClinicKeep", detalle: detalleNecesaria };
   if (r.estado === 1) return { clase: "aviso", icono: ICONO.aviso, titulo: "Sí, pero solo con ClinicKeep", detalle: detalleNecesaria };
   const minimo = res.t_red_h > 0 ? res.con.e_repuesta_wh / res.t_red_h : Infinity;
@@ -319,6 +480,15 @@ function textoRecarga(entradas, res) {
 
 function textoBateria(res) {
   const b = res.bateria;
+  if (!es()) {
+    if (b.vida_anios === null) {
+      return { clase: "ok", icono: ICONO.ok, titulo: "With no outages a month there is no wear from outages",
+        detalle: "Other cycles (maintenance, temperature) would decide the battery life." };
+    }
+    const clase = b.vida_anios < 3 ? "no" : (b.vida_anios < 8 ? "aviso" : "ok");
+    return { clase, icono: ICONO[clase], titulo: "About " + n1(b.vida_anios) + " years",
+      detalle: nCorto(b.cortes_anio) + " outages a year and " + b.ciclos + " life cycles. One full cycle per outage is assumed." };
+  }
   if (b.vida_anios === null) {
     return { clase: "ok", icono: ICONO.ok, titulo: "Sin cortes al mes no hay desgaste por cortes",
       detalle: "La vida de la batería la decidirían otros ciclos (mantenimiento, temperatura)." };
@@ -346,13 +516,13 @@ function selectorPerfil() {
   const fs = document.createElement("fieldset");
   fs.id = "fieldset-perfil";
   const lg = document.createElement("legend");
-  lg.textContent = "Perfil de supuestos";
+  lg.textContent = t("profile-legend");
   const div = document.createElement("div");
   div.className = "campo";
 
   const label = document.createElement("label");
   label.setAttribute("for", "perfil");
-  label.textContent = "Perfil ";
+  label.textContent = t("profile");
 
   const sel = document.createElement("select");
   sel.id = "perfil";
@@ -360,7 +530,7 @@ function selectorPerfil() {
   for (const id of Object.keys(PERFILES)) {
     const op = document.createElement("option");
     op.value = id;
-    op.textContent = PERFILES[id].nombre;
+    op.textContent = es() ? PERFILES[id].nombre : (EN_PERFIL[id] || PERFILES[id].nombre);
     sel.appendChild(op);
   }
   sel.value = perfilActivo;
@@ -370,8 +540,10 @@ function selectorPerfil() {
   nota.className = "nota";
   nota.id = "perfil-nota";
   // La etiqueta visible del perfil: la misma frase que usa scenarios.py.
-  nota.textContent = meta.etiqueta + ". Batería barrida: " +
-    meta.rango_bateria[0] + " a " + meta.rango_bateria[1] + " Wh útiles.";
+  const frase = es() ? meta.etiqueta : (EN_ETIQUETA[perfilActivo] || meta.etiqueta);
+  nota.textContent = frase + (es()
+    ? ". Batería barrida: " + meta.rango_bateria[0] + " a " + meta.rango_bateria[1] + " Wh útiles."
+    : ". Battery swept: " + meta.rango_bateria[0] + " to " + meta.rango_bateria[1] + " Wh usable.");
 
   div.append(label, sel, nota);
   fs.appendChild(div);
@@ -388,7 +560,7 @@ function pintarFormulario() {
     if (!claves.length) continue;
     const fs = document.createElement("fieldset");
     const lg = document.createElement("legend");
-    lg.textContent = grupo.titulo;
+    lg.textContent = es() ? grupo.titulo : (EN_GRUPO[grupo.id] || grupo.titulo);
     fs.appendChild(lg);
     const cont = document.createElement("div");
     cont.className = "campos";
@@ -415,7 +587,8 @@ function enlaceFuente(f) {
   a.rel = "noopener noreferrer";
   a.textContent = f.url;
   p.appendChild(a);
-  p.appendChild(document.createTextNode(" — " + f.texto));
+  const dicho = (!es() && EN_FUENTE[f.url]) || f.texto;
+  p.appendChild(document.createTextNode(" — " + dicho));
   return p;
 }
 
@@ -425,10 +598,10 @@ function campo(clave, meta) {
 
   const label = document.createElement("label");
   label.setAttribute("for", clave);
-  label.textContent = meta.nombre + " ";
+  label.textContent = nombreDe(clave, meta) + " ";
   const unidad = document.createElement("span");
   unidad.className = "unidad";
-  unidad.textContent = "(" + meta.unidad + ")";
+  unidad.textContent = "(" + unidadDe(clave, meta) + ")";
   label.appendChild(unidad);
 
   const input = document.createElement("input");
@@ -437,21 +610,22 @@ function campo(clave, meta) {
   input.name = clave;
   input.setAttribute("inputmode", "decimal");
   input.min = meta.min; input.max = meta.max; input.step = meta.paso;
-  input.value = meta.valor;
+  input.value = conservados && Object.prototype.hasOwnProperty.call(conservados, clave)
+    ? conservados[clave] : meta.valor;
   input.setAttribute("aria-describedby", clave + "-fuente " + clave + "-nota");
 
   const fuente = document.createElement("p");
   fuente.className = "etiqueta " + claseEtiqueta(meta.etiqueta);
   fuente.id = clave + "-fuente";
   const b = document.createElement("b");
-  b.textContent = meta.etiqueta;
+  b.textContent = marcaDe(meta.etiqueta);
   fuente.appendChild(b);
   if (meta.origen) fuente.appendChild(document.createTextNode(" · " + meta.origen));
 
   const nota = document.createElement("p");
   nota.className = "nota";
   nota.id = clave + "-nota";
-  nota.textContent = meta.nota;
+  nota.textContent = notaDe(clave, meta);
 
   div.append(label, input, fuente, nota);
   if (meta.fuente) div.appendChild(enlaceFuente(meta.fuente));
@@ -493,13 +667,33 @@ function mostrarErrores(errores) {
   lista.innerHTML = "";
   for (const e of errores) {
     const li = document.createElement("li");
-    li.textContent = e.mensaje;
+    li.textContent = textoError(e);
     lista.appendChild(li);
     const el = document.getElementById(e.clave);
     if (el) el.setAttribute("aria-invalid", "true");
   }
   caja.hidden = errores.length === 0;
   if (errores.length) document.getElementById("tarjetas").innerHTML = "";
+}
+
+function textoError(e) {
+  if (es()) return e.mensaje;
+  const meta = DEFAULTS[e.clave];
+  const name = meta ? nombreDe(e.clave, meta) : e.clave;
+  const m = e.mensaje;
+  if (m.endsWith(": falta el valor")) return name + ": missing value";
+  if (m.endsWith(": vacío")) return name + ": empty";
+  const citado = m.match(/"([^"]*)"/);
+  if (m.includes("no es un número")) return name + ': "' + (citado ? citado[1] : "") + '" is not a number';
+  if (m.includes("fuera de rango") && meta) {
+    return name + ": out of range (" + meta.min + " to " + meta.max + " " + unidadDe(e.clave, meta) + ")";
+  }
+  const temps = m.match(/\(([-0-9.]+) °C\).*\(([-0-9.]+) °C\)/);
+  if (m.startsWith("La temperatura") && temps) {
+    return "The switch-off temperature (" + temps[1] + " °C) must be below the safe limit (" + temps[2] + " °C)";
+  }
+  if (m.startsWith("Sin carga")) return "With no load there is nothing to size.";
+  return m;
 }
 
 const tarjeta = (titulo, cuerpo) =>
@@ -518,43 +712,54 @@ function calcular() {
   ultimo = { entradas: valores, res };
 
   const eUtil = energiaUtilWh(valores.nominal_wh, valores.dod_pct);
+  const L = es();
   const avisoHoldover = res.holdover_h >= MAX_H
-    ? "El ambiente no supera el límite seguro: la caja no se calienta por encima, así que el holdover se topa a 999 h."
-    : "Holdover: " + n2(res.holdover_h) + " h (tau " + n1(valores.tau_h) + " h, de " + n1(valores.t_hi_c) +
-      " a " + n1(valores.t_lim_c) + " °C con " + n1(valores.t_amb_c) + " °C de ambiente).";
+    ? (L
+      ? "El ambiente no supera el límite seguro: la caja no se calienta por encima, así que el holdover se topa a 999 h."
+      : "Ambient temperature does not exceed the safe limit: the box does not warm past it, so holdover is capped at 999 h.")
+    : (L
+      ? "Holdover: " + n2(res.holdover_h) + " h (tau " + n1(valores.tau_h) + " h, de " + n1(valores.t_hi_c) +
+        " a " + n1(valores.t_lim_c) + " °C con " + n1(valores.t_amb_c) + " °C de ambiente)."
+      : "Holdover: " + n2(res.holdover_h) + " h (tau " + n1(valores.tau_h) + " h, from " + n1(valores.t_hi_c) +
+        " to " + n1(valores.t_lim_c) + " °C at " + n1(valores.t_amb_c) + " °C ambient).");
+  const topeH = res.holdover_h >= MAX_H ? (L ? "999 h (tope)" : "999 h (cap)") : n2(res.holdover_h) + " h";
+  const aut = L ? "Autonomía de la nevera" : "Fridge autonomy";
+  const cajaH = L ? "Holdover de la caja" : "Box holdover";
+  const filaH = (horasA) =>
+    "<li><span>" + aut + "</span><span>" + n1(horasA) + " h</span></li>" +
+    "<li><span>" + cajaH + "</span><span>" + topeH + "</span></li>";
 
   const tarjetas = [
-    tarjeta("Sin ClinicKeep", '<p class="big">' + horas(res.sin.protegidas_h) + "</p>" +
-      '<ul class="desglose">' +
-      "<li><span>Autonomía de la nevera</span><span>" + n1(res.sin.horas_a_h) + " h</span></li>" +
-      "<li><span>Holdover de la caja</span><span>" + (res.holdover_h >= MAX_H ? "999 h (tope)" : n2(res.holdover_h) + " h") + "</span></li>" +
-      "</ul>" +
-      '<p class="nota-card">A, B y C tiran de la misma batería hasta agotarla.</p>' +
+    tarjeta(L ? "Sin ClinicKeep" : "Without ClinicKeep", '<p class="big">' + horas(res.sin.protegidas_h) + "</p>" +
+      '<ul class="desglose">' + filaH(res.sin.horas_a_h) + "</ul>" +
+      '<p class="nota-card">' + (L
+        ? "A, B y C tiran de la misma batería hasta agotarla."
+        : "A, B and C draw on the same battery until it is empty.") + "</p>" +
       '<p class="nota-card">' + avisoHoldover + "</p>"),
 
-    tarjeta("Con ClinicKeep", '<p class="big">' + horas(res.con.protegidas_h) + "</p>" +
-      '<ul class="desglose">' +
-      "<li><span>Autonomía de la nevera</span><span>" + n1(res.con.horas_a_h) + " h</span></li>" +
-      "<li><span>Holdover de la caja</span><span>" + (res.holdover_h >= MAX_H ? "999 h (tope)" : n2(res.holdover_h) + " h") + "</span></li>" +
-      "</ul>" +
-      '<p class="nota-card">Solo la nevera: B y C se van apagando solas para que A llegue más lejos.</p>'),
+    tarjeta(L ? "Con ClinicKeep" : "With ClinicKeep", '<p class="big">' + horas(res.con.protegidas_h) + "</p>" +
+      '<ul class="desglose">' + filaH(res.con.horas_a_h) + "</ul>" +
+      '<p class="nota-card">' + (L
+        ? "Solo la nevera: B y C se van apagando solas para que A llegue más lejos."
+        : "Only the fridge: B and C open on their own so A lasts longer.") + "</p>"),
 
-    tarjeta("Mejora con ClinicKeep", '<p class="big">' +
+    tarjeta(L ? "Mejora con ClinicKeep" : "Gain with ClinicKeep", '<p class="big">' +
       (res.mejora_pct === null ? "—" : (res.mejora_pct >= 0 ? "+" : "") + n1(res.mejora_pct) + ' <span class="unit">%</span>') +
       "</p>" +
       '<p class="nota-card">' + n1(res.sin.protegidas_h) + " h → " + n1(res.con.protegidas_h) +
-      " h de tiempo protegido con las mismas entradas.</p>"),
+      (L ? " h de tiempo protegido con las mismas entradas." : " h of protected time with the same inputs.") + "</p>"),
 
-    tarjeta("¿Cubre todo el corte de " + n1(valores.d_h) + " h?",
+    tarjeta((L ? "¿Cubre todo el corte de " : "Does it cover the whole ") + n1(valores.d_h) + (L ? " h?" : " h outage?"),
       estadoHTML(textoCobertura(res, valores.d_h))),
 
-    tarjeta("¿Alcanza el cargador de " + n1(valores.cargador_w) + " W?",
+    tarjeta((L ? "¿Alcanza el cargador de " : "Is the ") + n1(valores.cargador_w) + (L ? " W?" : " W charger enough?"),
       estadoHTML(textoRecarga(valores, res))),
 
-    tarjeta("Vida estimada de la batería", estadoHTML(textoBateria(res)) +
+    tarjeta(L ? "Vida estimada de la batería" : "Estimated battery life", estadoHTML(textoBateria(res)) +
       '<ul class="desglose">' +
-      "<li><span>Batería útil</span><span>" + n1(eUtil) + " Wh</span></li>" +
-      "<li><span>Energía usada por corte (con ClinicKeep)</span><span>" + n1(res.con.e_usada_wh) + " Wh</span></li>" +
+      "<li><span>" + (L ? "Batería útil" : "Usable battery") + "</span><span>" + n1(eUtil) + " Wh</span></li>" +
+      "<li><span>" + (L ? "Energía usada por corte (con ClinicKeep)" : "Energy used per outage (with ClinicKeep)") +
+      "</span><span>" + n1(res.con.e_usada_wh) + " Wh</span></li>" +
       "</ul>"),
   ];
   document.getElementById("tarjetas").innerHTML = tarjetas.join("");
@@ -566,28 +771,35 @@ function resumenTexto() {
   const { entradas, res } = ultimo;
   const campos = camposDePerfil(perfilActivo);
   const linea = (t) => t + "\n";
-  let s = "ClinicKeep - calculadora de dimensionamiento\n";
-  s += PIE_TEXTO + "\n";
-  s += NOTA_HOLDOVER + "\n";
-  s += "Perfil: " + PERFILES[perfilActivo].nombre + " (" + PERFILES[perfilActivo].etiqueta + ")\n\nENTRADAS\n";
+  const L = es();
+  const perfil = PERFILES[perfilActivo];
+  let s = (L ? "ClinicKeep - calculadora de dimensionamiento" : "ClinicKeep - sizing calculator") + "\n";
+  s += t("pie") + "\n";
+  s += t("holdover") + "\n";
+  s += (L ? "Perfil: " : "Profile: ") + (L ? perfil.nombre : (EN_PERFIL[perfilActivo] || perfil.nombre)) +
+    " (" + (L ? perfil.etiqueta : (EN_ETIQUETA[perfilActivo] || perfil.etiqueta)) + ")\n\n" +
+    (L ? "ENTRADAS" : "INPUTS") + "\n";
   for (const clave of Object.keys(DEFAULTS)) {
     const meta = campos[clave];
-    s += linea("  " + meta.nombre + ": " + entradas[clave] + " " + meta.unidad +
-      "  [" + meta.etiqueta + (meta.origen ? " · " + meta.origen : "") +
-      (meta.fuente ? " · fuente: " + meta.fuente.url : "") + "]");
+    s += linea("  " + nombreDe(clave, meta) + ": " + entradas[clave] + " " + unidadDe(clave, meta) +
+      "  [" + marcaDe(meta.etiqueta) + (meta.origen ? " · " + meta.origen : "") +
+      (meta.fuente ? (L ? " · fuente: " : " · source: ") + meta.fuente.url : "") + "]");
   }
-  s += "\nRESULTADOS\n";
-  s += linea("  Sin ClinicKeep: " + n2(res.sin.protegidas_h) + " h protegidas (autonomia de A " +
+  s += "\n" + (L ? "RESULTADOS" : "RESULTS") + "\n";
+  s += linea((L ? "  Sin ClinicKeep: " : "  Without ClinicKeep: ") + n2(res.sin.protegidas_h) +
+    (L ? " h protegidas (autonomia de A " : " h protected (A autonomy ") +
     n2(res.sin.horas_a_h) + " h + holdover " + n2(res.holdover_h) + " h)");
-  s += linea("  Con ClinicKeep: " + n2(res.con.protegidas_h) + " h protegidas (autonomia de A " +
+  s += linea((L ? "  Con ClinicKeep: " : "  With ClinicKeep: ") + n2(res.con.protegidas_h) +
+    (L ? " h protegidas (autonomia de A " : " h protected (A autonomy ") +
     n2(res.con.horas_a_h) + " h + holdover " + n2(res.holdover_h) + " h)");
-  s += linea("  Mejora: " + (res.mejora_pct === null ? "-" : n1(res.mejora_pct) + " %"));
-  s += linea("  Corte de " + n1(entradas.d_h) + " h: " + textoCobertura(res, entradas.d_h).titulo);
-  s += linea("  Cargador de " + n1(entradas.cargador_w) + " W: " + textoRecarga(entradas, res).titulo);
-  s += linea("  Bateria: " + (res.bateria.vida_anios === null
-    ? "sin cortes no hay desgaste por cortes"
-    : n1(res.bateria.vida_anios) + " anios (" + nCorto(res.bateria.cortes_anio) + " cortes/anio, " +
-      res.bateria.ciclos + " ciclos de vida)"));
+  s += linea((L ? "  Mejora: " : "  Gain: ") + (res.mejora_pct === null ? "-" : n1(res.mejora_pct) + " %"));
+  s += linea((L ? "  Corte de " : "  Outage of ") + n1(entradas.d_h) + " h: " + textoCobertura(res, entradas.d_h).titulo);
+  s += linea((L ? "  Cargador de " : "  Charger of ") + n1(entradas.cargador_w) + " W: " + textoRecarga(entradas, res).titulo);
+  s += linea((L ? "  Bateria: " : "  Battery: ") + (res.bateria.vida_anios === null
+    ? (L ? "sin cortes no hay desgaste por cortes" : "with no outages there is no wear from outages")
+    : n1(res.bateria.vida_anios) + (L ? " anios (" : " years (") + nCorto(res.bateria.cortes_anio) +
+      (L ? " cortes/anio, " : " outages/year, ") + res.bateria.ciclos +
+      (L ? " ciclos de vida)" : " life cycles)")));
   return s.replace(/<[^>]+>/g, "");
 }
 
@@ -603,19 +815,21 @@ function csvTexto() {
   const filas = [["tipo", "clave", "valor", "unidad", "etiqueta", "nota"]];
   for (const clave of Object.keys(DEFAULTS)) {
     const meta = campos[clave];
-    filas.push(["entrada", clave, entradas[clave], meta.unidad, meta.etiqueta,
-      meta.nota + (meta.origen ? " || origen: " + meta.origen : "") +
-      (meta.fuente ? " || fuente: " + meta.fuente.url + " — " + meta.fuente.texto : "")]);
+    const dicho = meta.fuente ? ((!es() && EN_FUENTE[meta.fuente.url]) || meta.fuente.texto) : "";
+    filas.push(["entrada", clave, entradas[clave], unidadDe(clave, meta), marcaDe(meta.etiqueta),
+      notaDe(clave, meta) + (meta.origen ? " || origen: " + meta.origen : "") +
+      (meta.fuente ? " || fuente: " + meta.fuente.url + " — " + dicho : "")]);
   }
-  filas.push(["salida", "prot_sin_h", n2(res.sin.protegidas_h), "h", "", "horas protegidas sin ClinicKeep"]);
-  filas.push(["salida", "prot_con_h", n2(res.con.protegidas_h), "h", "", "horas protegidas con ClinicKeep"]);
-  filas.push(["salida", "mejora_pct", res.mejora_pct === null ? "" : n1(res.mejora_pct), "%", "", "mejora del tiempo protegido"]);
-  filas.push(["salida", "cobertura_estado", res.cobertura.estado, "0/1/2", "", "0 no cubre, 1 solo con ClinicKeep, 2 cubre con y sin"]);
-  filas.push(["salida", "recarga_estado", res.recarga.estado, "0/1/2", "", "0 no recarga, 1 solo con ClinicKeep, 2 recarga con y sin"]);
-  filas.push(["salida", "vida_anios", res.bateria.vida_anios === null ? "" : n1(res.bateria.vida_anios), "anios", "", "ciclos / (cortes_mes x 12)"]);
+  const L = es();
+  filas.push(["salida", "prot_sin_h", n2(res.sin.protegidas_h), "h", "", L ? "horas protegidas sin ClinicKeep" : "protected hours without ClinicKeep"]);
+  filas.push(["salida", "prot_con_h", n2(res.con.protegidas_h), "h", "", L ? "horas protegidas con ClinicKeep" : "protected hours with ClinicKeep"]);
+  filas.push(["salida", "mejora_pct", res.mejora_pct === null ? "" : n1(res.mejora_pct), "%", "", L ? "mejora del tiempo protegido" : "gain in protected time"]);
+  filas.push(["salida", "cobertura_estado", res.cobertura.estado, "0/1/2", "", L ? "0 no cubre, 1 solo con ClinicKeep, 2 cubre con y sin" : "0 does not cover, 1 only with ClinicKeep, 2 covers with and without"]);
+  filas.push(["salida", "recarga_estado", res.recarga.estado, "0/1/2", "", L ? "0 no recarga, 1 solo con ClinicKeep, 2 recarga con y sin" : "0 does not recharge, 1 only with ClinicKeep, 2 recharges with and without"]);
+  filas.push(["salida", "vida_anios", res.bateria.vida_anios === null ? "" : n1(res.bateria.vida_anios), L ? "anios" : "years", "", "ciclos / (cortes_mes x 12)"]);
   filas.push(["meta", "perfil", PERFILES[perfilActivo].id, "", "",
-    PERFILES[perfilActivo].etiqueta]);
-  filas.push(["meta", "pie", PIE_TEXTO, "", "", ""]);
+    L ? PERFILES[perfilActivo].etiqueta : (EN_ETIQUETA[perfilActivo] || PERFILES[perfilActivo].etiqueta)]);
+  filas.push(["meta", "pie", t("pie"), "", "", ""]);
   filas.push(["meta", "generado", new Date().toISOString(), "", "", ""]);
   return filas.map((f) => f.map(cita).join(",")).join("\n") + "\n";
 }
@@ -623,10 +837,15 @@ function csvTexto() {
 document.getElementById("btn-copiar").addEventListener("click", async () => {
   const texto = resumenTexto();
   const estado = document.getElementById("estado-copia");
-  if (!texto) { estado.textContent = "No hay resultados que copiar: revisa los campos."; return; }
+  if (!texto) {
+    estado.textContent = es() ? "No hay resultados que copiar: revisa los campos." : "There are no results to copy: check the fields.";
+    return;
+  }
   try {
     await navigator.clipboard.writeText(texto);
-    estado.textContent = "Resumen copiado (" + texto.split("\n").length + " líneas).";
+    estado.textContent = es()
+      ? "Resumen copiado (" + texto.split("\n").length + " líneas)."
+      : "Summary copied (" + texto.split("\n").length + " lines).";
   } catch (err) {
     const area = document.createElement("textarea");
     area.value = texto;
@@ -638,15 +857,21 @@ document.getElementById("btn-copiar").addEventListener("click", async () => {
     try { ok = document.execCommand("copy"); } catch (e2) { ok = false; }
     document.body.removeChild(area);
     estado.textContent = ok
-      ? "Resumen copiado."
-      : "El navegador no deja copiar solo: usa «Descargar CSV» para llevarte los números.";
+      ? (es() ? "Resumen copiado." : "Summary copied.")
+      : (es()
+        ? "El navegador no deja copiar solo: usa «Descargar CSV» para llevarte los números."
+        : "The browser will not copy on its own: use Download CSV to take the numbers.");
   }
 });
 
 document.getElementById("btn-csv").addEventListener("click", (ev) => {
   const texto = csvTexto();
   const estado = document.getElementById("estado-copia");
-  if (!texto) { ev.preventDefault(); estado.textContent = "No hay resultados que descargar: revisa los campos."; return; }
+  if (!texto) {
+    ev.preventDefault();
+    estado.textContent = es() ? "No hay resultados que descargar: revisa los campos." : "There are no results to download: check the fields.";
+    return;
+  }
   ev.currentTarget.href = URL.createObjectURL(new Blob([texto], { type: "text/csv;charset=utf-8" }));
 });
 
@@ -665,7 +890,28 @@ document.getElementById("formulario").addEventListener("change", (ev) => {
   if (ev.target && ev.target.id === "perfil") cambiarPerfil(ev.target.value);
 });
 
+function leerEscritos() {
+  const v = {};
+  for (const clave of Object.keys(DEFAULTS)) {
+    const el = document.getElementById(clave);
+    if (el) v[clave] = el.value;
+  }
+  return v;
+}
+function ponerIdioma(next) {
+  if (next === lang) return;
+  conservados = leerEscritos();
+  lang = next;
+  applyChrome();
+  pintarFormulario();
+  conservados = null;
+  calcular();
+}
+document.getElementById("lang-en").addEventListener("click", () => ponerIdioma("en"));
+document.getElementById("lang-es").addEventListener("click", () => ponerIdioma("es-419"));
+
 perfilActivo = perfilInicial();
+applyChrome();
 pintarFormulario();
 calcular();
 </script>

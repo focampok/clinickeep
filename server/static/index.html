@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ClinicKeep - dashboard (datos simulados)</title>
+<title>ClinicKeep — panel (simulated data)</title>
 <style>
   /* Tema claro por defecto; oscuro con prefers-color-scheme. Contraste AA:
      texto normal >= 4.5:1 sobre su fondo en ambos temas. */
@@ -54,8 +54,17 @@
   .skip:focus { left: 0; }
 
   header { padding: 1rem 1rem .5rem; }
-  header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .01em; }
-  header .sub { margin: .15rem 0 .6rem; color: var(--muted); font-size: .9rem; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 1.7rem; letter-spacing: .01em; line-height: 1.15; }
+  header .sub { margin: .35rem 0 0; color: var(--muted); font-size: .9rem; max-width: 62ch; }
+  .lang { display: flex; flex: 0 0 auto; gap: .35rem; }
+  .lang button {
+    font: inherit; font-weight: 600; min-width: 44px; min-height: 44px;
+    padding: .4rem .7rem; cursor: pointer;
+    color: var(--muted); background: var(--panel);
+    border: 1px solid var(--line); border-radius: .45rem;
+  }
+  .lang button[aria-pressed="true"] { color: var(--text); background: var(--panel-2); }
 
   /* Banner permanente de datos simulados: pegado arriba, no se cierra. */
   .banner {
@@ -63,7 +72,6 @@
     margin: 0 0 1rem;
     padding: .6rem 1rem;
     background: var(--panel-2);
-    border-top: 3px solid var(--warn);
     border-bottom: 1px solid var(--line);
     color: var(--text);
     font-weight: 700;
@@ -76,14 +84,11 @@
   nav.tabs button {
     font: inherit; font-weight: 600;
     color: var(--text); background: var(--panel);
-    border: 1px solid var(--line); border-bottom: none;
+    border: 1px solid var(--line);
     border-radius: .5rem .5rem 0 0;
-    padding: .55rem .9rem; cursor: pointer;
+    min-height: 44px; padding: .55rem .9rem; cursor: pointer;
   }
-  nav.tabs button[aria-selected="true"] {
-    background: var(--panel-2);
-    border-bottom: 3px solid var(--accent);
-  }
+  nav.tabs button[aria-selected="true"] { background: var(--panel-2); }
 
   main { padding: 0 1rem 2rem; }
   .panel { border-top: 1px solid var(--line); padding-top: 1rem; }
@@ -109,24 +114,24 @@
   /* Nota fija de alcance del holdover: la misma frase que en la calculadora. */
   .holdover {
     margin: .5rem 0 0; padding: .5rem .6rem; font-size: .82rem; line-height: 1.4;
-    color: var(--muted); background: var(--panel); border-left: 3px solid var(--warn);
+    color: var(--muted); background: var(--panel); border: 1px solid var(--warn);
     border-radius: .25rem;
   }
 
   /* Modo: icono + texto + descripcion. Nunca solo color. */
   .badge {
     display: inline-flex; align-items: center; gap: .5rem;
-    border: 2px solid var(--line); border-left-width: 8px;
+    border: 2px solid var(--line);
     border-radius: .5rem; padding: .4rem .7rem;
     font-weight: 700; font-size: 1.1rem; background: var(--bg);
   }
   .badge .ico { font-size: 1.2rem; line-height: 1; }
   .modo-NORMAL       { border-color: var(--ok);     color: var(--ok); }
-  .modo-CORTE        { border-color: var(--warn);   color: var(--warn); border-left-style: dashed; }
-  .modo-AHORRO       { border-color: var(--accent); color: var(--accent); border-left-style: dotted; }
-  .modo-CRITICO      { border-color: var(--danger); color: var(--danger); border-left-style: double; border-left-width: 8px; }
-  .modo-RESTAURACION { border-color: var(--accent); color: var(--accent); border-left-style: solid; }
-  .modo-FALLO_SENSOR { border-color: var(--unknown); color: var(--unknown); border-left-style: dashed; }
+  .modo-CORTE        { border-color: var(--warn);   color: var(--warn); border-style: dashed; }
+  .modo-AHORRO       { border-color: var(--accent); color: var(--accent); border-style: dotted; }
+  .modo-CRITICO      { border-color: var(--danger); color: var(--danger); border-style: double; }
+  .modo-RESTAURACION { border-color: var(--accent); color: var(--accent); border-style: solid; }
+  .modo-FALLO_SENSOR { border-color: var(--unknown); color: var(--unknown); border-style: dashed; }
 
   /* Barras (bateria). El numero va siempre al lado: no depende del color. */
   .meter { height: 1.1rem; background: var(--panel-2); border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; margin: .35rem 0; }
@@ -148,7 +153,7 @@
   caption { text-align: left; color: var(--muted); font-size: .82rem; padding-bottom: .35rem; }
   th, td { border-bottom: 1px solid var(--line); padding: .35rem .45rem; text-align: left; }
   thead th { background: var(--panel-2); position: sticky; top: 0; }
-  .scroll { max-height: 26rem; overflow: auto; border: 1px solid var(--line); border-radius: .5rem; }
+  .scroll { max-height: 26rem; overflow: auto; border: 1px solid var(--line); border-radius: .5rem; padding: .75rem; }
   .mono { font-variant-numeric: tabular-nums; }
   .tag { display: inline-block; border: 1px solid var(--line); border-radius: .3rem; padding: 0 .3rem; font-size: .78rem; }
 
@@ -164,7 +169,8 @@
   figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: .5rem; background: #fff; }
   .btn {
     font: inherit; font-weight: 600; color: var(--text); background: var(--panel-2);
-    border: 1px solid var(--line); border-radius: .4rem; padding: .4rem .7rem; cursor: pointer;
+    border: 1px solid var(--line); border-radius: .4rem;
+    min-height: 44px; padding: .4rem .7rem; cursor: pointer;
   }
   footer.pie {
     margin-top: 1.5rem; padding-top: .8rem; border-top: 1px solid var(--line);
@@ -179,106 +185,111 @@
 </style>
 </head>
 <body>
-<a class="skip" href="#main">Saltar al contenido</a>
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
 
 <header>
-  <h1>ClinicKeep - panel de la política de energía</h1>
-  <p class="sub">Ingesta HTTP del firmware (Wokwi / ESP32) y escenarios S2–S3.
-    <a href="/calc">Calculadora de dimensionamiento →</a></p>
+  <div class="top">
+    <div>
+      <h1 data-i18n="h1">ClinicKeep — energy policy panel</h1>
+      <p class="sub"><span data-i18n="sub">HTTP intake from the firmware (Wokwi / ESP32) and scenarios S2–S3.</span>
+        <a href="/calc" data-i18n="calc-link">Sizing calculator →</a></p>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" id="lang-en" aria-pressed="true" lang="en">EN</button>
+      <button type="button" id="lang-es" aria-pressed="false" lang="es-419">ES</button>
+    </div>
+  </div>
 </header>
 
-<p class="banner" role="note">DATOS SIMULADOS
-  <span>— todo lo que muestra este panel viene de la simulación, no de hardware real.</span>
+<p class="banner" role="note"><span data-i18n="banner-k">SIMULATED DATA</span>
+  <span data-i18n="banner-s">— everything on this panel comes from the simulation, not from real hardware.</span>
 </p>
 
-<nav class="tabs" role="tablist" aria-label="Secciones del panel">
-  <button id="tab-estado" role="tab" aria-selected="true" aria-controls="panel-estado" tabindex="0">Estado</button>
-  <button id="tab-escenarios" role="tab" aria-selected="false" aria-controls="panel-escenarios" tabindex="-1">Escenarios</button>
+<nav class="tabs" role="tablist" aria-label="Panel sections">
+  <button id="tab-estado" role="tab" aria-selected="true" aria-controls="panel-estado" tabindex="0" data-i18n="tab-status">Status</button>
+  <button id="tab-escenarios" role="tab" aria-selected="false" aria-controls="panel-escenarios" tabindex="-1" data-i18n="tab-scenarios">Scenarios</button>
 </nav>
 
 <main id="main">
   <!-- ------------------------------------------------ Estado -->
   <section id="panel-estado" class="panel" role="tabpanel" aria-labelledby="tab-estado" tabindex="0">
     <p id="aviso" class="alert" role="alert" hidden></p>
+    <h2 data-i18n="live">Live readings</h2>
 
     <div class="grid">
       <div class="card">
-        <h3>Modo de la política</h3>
-        <p><span id="modo-badge" class="badge modo-?"><span class="ico" aria-hidden="true">?</span><span id="modo-texto">sin datos</span></span></p>
-        <p id="modo-desc" class="note">Esperando la primera lectura de la ingesta…</p>
+        <h3 data-i18n="card-mode">Policy mode</h3>
+        <p><span id="modo-badge" class="badge modo-?"><span class="ico" aria-hidden="true">?</span><span id="modo-texto" data-i18n="no-data">no data</span></span></p>
+        <p id="modo-desc" class="note" data-i18n="waiting">Waiting for the first intake reading…</p>
         <p class="note mono" id="modo-extra"></p>
       </div>
 
       <div class="card">
-        <h3>Zonas</h3>
+        <h3 data-i18n="card-zones">Zones</h3>
         <ul class="zones">
-          <li><span>A · nevera de vacunas</span><b class="on" id="zona-a">sin relé: nunca se corta</b></li>
-          <li><span>B · luces de pasillo</span><b id="zona-b">—</b></li>
-          <li><span>C · sala de espera</span><b id="zona-c">—</b></li>
+          <li><span data-i18n="zone-a">A · vaccine fridge</span><b class="on" id="zona-a" data-i18n="zone-a-state">no relay: it is never opened</b></li>
+          <li><span data-i18n="zone-b">B · hallway lights</span><b id="zona-b">—</b></li>
+          <li><span data-i18n="zone-c">C · waiting room</span><b id="zona-c">—</b></li>
         </ul>
-        <p class="note">En CORTE se abre solo C; B se abre en AHORRO, cuando la autonomía total baja de T_RESERVA_H.</p>
+        <p class="note" data-i18n="zone-note">In CORTE only C opens; B opens in AHORRO, when total autonomy falls below T_RESERVA_H.</p>
       </div>
 
       <div class="card">
-        <h3>Batería</h3>
-        <p class="big mono" id="soc-texto">— <span class="unit">de carga</span></p>
-        <div class="meter" role="meter" id="soc-meter" aria-label="Estado de carga de la batería" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <h3 data-i18n="card-batt">Battery</h3>
+        <p class="big mono" id="soc-texto">— <span class="unit" data-i18n="of-charge">of charge</span></p>
+        <div class="meter" role="meter" id="soc-meter" aria-label="Battery state of charge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <i id="soc-bar" style="width:0%"></i>
         </div>
-        <p class="note">SoC reportado por el firmware (<code>soc</code>, 0–1).</p>
+        <p class="note" data-i18n="soc-note">State of charge reported by the firmware (soc, 0–1).</p>
       </div>
 
       <div class="card">
-        <h3>Horas protegidas (tiempo seguro)</h3>
+        <h3 data-i18n="card-safe">Protected hours (safe time)</h3>
         <p class="big mono" id="safe-texto">— <span class="unit">h</span></p>
         <ul class="zones">
-          <li><span>Autonomía de A</span><b class="mono" id="auta-texto">—</b></li>
-          <li><span>+ Holdover térmico</span><b class="mono" id="holo-texto">—</b></li>
+          <li><span data-i18n="aut-a">Autonomy of A</span><b class="mono" id="auta-texto">—</b></li>
+          <li><span data-i18n="plus-holo">+ Thermal holdover</span><b class="mono" id="holo-texto">—</b></li>
         </ul>
-        <p class="note" id="safe-nota">Tiempo seguro = autonomía de A + holdover.</p>
-        <p class="holdover" id="nota-holdover" role="note">Aplica a neveras sin forro de hielo (holdover corto). Las neveras PQS con forro de hielo tienen un holdover de horas a días y necesitan menos ayuda.</p>
+        <p class="note" id="safe-nota" data-i18n="safe-eq">Safe time = autonomy of A + holdover.</p>
+        <p class="holdover" id="nota-holdover" role="note" data-i18n="holdover">Applies to fridges without an ice lining (short holdover). PQS fridges with an ice lining hold for hours to days and need less of this help.</p>
       </div>
 
       <div class="card">
-        <h3>Temperatura (sensor ambiente)</h3>
-        <p class="big" id="temp-texto">no disponible</p>
+        <h3 data-i18n="card-temp">Temperature (ambient sensor)</h3>
+        <p class="big" id="temp-texto" data-i18n="temp-unavailable">not available</p>
         <div id="temp-serie"></div>
         <ul class="zones">
-          <li><span>T_HI · techo de control (caja)</span><b class="mono">5.0 °C</b></li>
-          <li><span>T_LIM · límite seguro (caja)</span><b class="mono">7.5 °C</b></li>
+          <li><span data-i18n="t-hi">T_HI · control ceiling (box)</span><b class="mono">5.0 °C</b></li>
+          <li><span data-i18n="t-lim">T_LIM · safe limit (box)</span><b class="mono">7.5 °C</b></li>
         </ul>
-        <p class="note" id="temp-nota">El firmware <strong>no emite</strong> la temperatura en el JSON
-          de serie. Ver <code>docs/INGEST_SCHEMA.md</code>.</p>
+        <p class="note" id="temp-nota" data-i18n="temp-note">The firmware does not send temperature in the serial JSON. See docs/INGEST_SCHEMA.md.</p>
       </div>
 
       <div class="card">
-        <h3>Red y alarma</h3>
+        <h3 data-i18n="card-grid">Grid and alarm</h3>
         <ul class="zones">
-          <li><span>Red eléctrica <span class="tag" id="red-origen">—</span></span><b id="red-texto">—</b></li>
-          <li><span>Alarma <span class="tag" id="alarma-origen">—</span></span><b id="alarma-texto">—</b></li>
-          <li><span>Autonomía total</span><b class="mono" id="autotal-texto">—</b></li>
-          <li><span>Reloj SIM (k)</span><b class="mono" id="k-texto">—</b></li>
+          <li><span><span data-i18n="grid">Mains</span> <span class="tag" id="red-origen">—</span></span><b id="red-texto">—</b></li>
+          <li><span><span data-i18n="alarm">Alarm</span> <span class="tag" id="alarma-origen">—</span></span><b id="alarma-texto">—</b></li>
+          <li><span data-i18n="aut-total">Total autonomy</span><b class="mono" id="autotal-texto">—</b></li>
+          <li><span data-i18n="sim-clock">SIM clock (k)</span><b class="mono" id="k-texto">—</b></li>
         </ul>
-        <p class="note">Con el firmware nuevo se usan sus <code>grid_ok</code> y <code>alarm</code>
-          (etiqueta <em>nativo</em>); si llegan como <code>null</code> (eventos antiguos) se derivan
-          del <code>mode</code> (etiqueta <em>derivado</em>): hay red en NORMAL/RESTAURACION y suena
-          alarma en CRITICO/FALLO_SENSOR, igual que lo calcula <code>policy.py</code>.</p>
+        <p class="note" data-i18n="grid-note">With the new firmware its grid_ok and alarm are used (label native); if they arrive as null (older events) they are derived from mode (label derived): there is mains in NORMAL/RESTAURACION and the alarm sounds in CRITICO/FALLO_SENSOR, the same way policy.py computes it.</p>
       </div>
     </div>
 
-    <h2>Línea de tiempo (últimos 50 estados)</h2>
+    <h2 data-i18n="timeline">Timeline (last 50 states)</h2>
     <div class="scroll">
       <table id="tabla-eventos">
-        <caption id="cap-eventos">Sin datos todavía.</caption>
+        <caption id="cap-eventos" data-i18n="no-rows">No data yet.</caption>
         <thead>
           <tr>
-            <th scope="col">Hora (servidor)</th>
-            <th scope="col">Modo</th>
+            <th scope="col" data-i18n="th-time">Time (server)</th>
+            <th scope="col" data-i18n="th-mode">Mode</th>
             <th scope="col">SoC</th>
-            <th scope="col">Tiempo seguro</th>
+            <th scope="col" data-i18n="th-safe">Safe time</th>
             <th scope="col">B</th>
             <th scope="col">C</th>
-            <th scope="col">Eventos de la política</th>
+            <th scope="col" data-i18n="th-events">Policy events</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -288,13 +299,12 @@
 
   <!-- ------------------------------------------------ Escenarios -->
   <section id="panel-escenarios" class="panel" role="tabpanel" aria-labelledby="tab-escenarios" tabindex="0" hidden>
-    <h2>Escenarios S2–S3 (simulación, no datos medidos)</h2>
+    <h2 data-i18n="scenarios-h">Scenarios S2–S3 (simulation, not measured data)</h2>
     <div class="escenarios" id="lista-escenarios"></div>
     <footer class="pie">
-      <p id="supuestos">Cargando supuestos…</p>
-      <p>Los mapas y CSV los publica <code>tools/publish_scenarios.py</code> a partir de
-        <code>out/</code>. Manifiesto: <a href="static/scenarios.json">static/scenarios.json</a>
-        · Esquema de ingesta: <code>docs/INGEST_SCHEMA.md</code>.</p>
+      <p id="supuestos" data-i18n="loading">Loading assumptions…</p>
+      <p><span data-i18n="scenarios-foot">The maps and CSVs are published by tools/publish_scenarios.py from out/. Manifest:</span>
+        <a href="static/scenarios.json">static/scenarios.json</a><span data-i18n="scenarios-schema">. Intake schema: docs/INGEST_SCHEMA.md.</span></p>
     </footer>
   </section>
 </main>
@@ -302,13 +312,183 @@
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
+let lang = "en";
+let ultimoEv = null;
+let ultimos = [];
+let totalGuardados = 0;
+let manifiesto = null;
+const COPY = {
+  en: {
+    title: "ClinicKeep — panel (simulated data)",
+    skip: "Skip to content", h1: "ClinicKeep — energy policy panel",
+    sub: "HTTP intake from the firmware (Wokwi / ESP32) and scenarios S2–S3.",
+    "calc-link": "Sizing calculator →",
+    "banner-k": "SIMULATED DATA",
+    "banner-s": "— everything on this panel comes from the simulation, not from real hardware.",
+    "tabs-label": "Panel sections", "tab-status": "Status", "tab-scenarios": "Scenarios",
+    live: "Live readings", "card-mode": "Policy mode", "no-data": "no data",
+    waiting: "Waiting for the first intake reading…",
+    "card-zones": "Zones", "zone-a": "A · vaccine fridge", "zone-a-state": "no relay: it is never opened",
+    "zone-b": "B · hallway lights", "zone-c": "C · waiting room",
+    "zone-note": "In CORTE only C opens; B opens in AHORRO, when total autonomy falls below T_RESERVA_H.",
+    "card-batt": "Battery", "of-charge": "of charge", "soc-note": "State of charge reported by the firmware (soc, 0–1).",
+    "soc-aria": "Battery state of charge",
+    "card-safe": "Protected hours (safe time)", "aut-a": "Autonomy of A", "plus-holo": "+ Thermal holdover",
+    "safe-eq": "Safe time = autonomy of A + holdover.",
+    "safe-nosensor": "Without a temperature sensor there is no holdover: safe time is only the battery.",
+    "safe-with": "Safe time = autonomy of A + thermal holdover.",
+    protected: "protected",
+    holdover: "Applies to fridges without an ice lining (short holdover). PQS fridges with an ice lining hold for hours to days and need less of this help.",
+    "card-temp": "Temperature (ambient sensor)", "temp-unavailable": "not available",
+    "t-hi": "T_HI · control ceiling (box)", "t-lim": "T_LIM · safe limit (box)",
+    "temp-note": "The firmware does not send temperature in the serial JSON. See docs/INGEST_SCHEMA.md.",
+    "temp-none": "Waiting for intake readings…", "temp-bad": "sensor has no reading",
+    "temp-bad-note": "The firmware reports temp_ok: false. Without a DS18B20 reading there is no thermal holdover, so safe time is only the autonomy of A.",
+    "temp-old": "This event has no temp_c (the older 11-field format, from before phase 3b). The event is valid; there is just no temperature to show.",
+    "temp-flat": "The series is flat because the simulator’s DS18B20 is fixed. There is no variation to draw.",
+    "temp-above": "above T_LIM (7.5 °C)", "temp-band": "in the holdover band, between T_HI and T_LIM",
+    "temp-below": "below T_HI (5.0 °C)",
+    "temp-read": "Reading {estado}. Mind the quantity: this mock’s DS18B20 measures the ambient temperature (the t_amb_c that enters holdover_h()), and T_HI/T_LIM are thresholds of the box, which has no sensor of its own: the lines are a reference, not a control. T_HI/T_LIM are ASSUMED (config.py).",
+    "card-grid": "Grid and alarm", grid: "Mains", alarm: "Alarm", "aut-total": "Total autonomy",
+    "sim-clock": "SIM clock (k)",
+    "grid-note": "With the new firmware its grid_ok and alarm are used (label native); if they arrive as null (older events) they are derived from mode (label derived): there is mains in NORMAL/RESTAURACION and the alarm sounds in CRITICO/FALLO_SENSOR, the same way policy.py computes it.",
+    "grid-on": "mains present", "grid-off": "no mains", "alarm-on": "active", "alarm-off": "at rest",
+    native: "native", derived: "derived", powered: "powered", unpowered: "unpowered",
+    closed: "closed", open: "open",
+    timeline: "Timeline (last 50 states)", "no-rows": "No data yet.",
+    "th-time": "Time (server)", "th-mode": "Mode", "th-safe": "Safe time", "th-events": "Policy events",
+    "rows-n": "{n} states (newest first).",
+    "rows-of": "{n} of {m} stored states (newest first).",
+    "rows-empty": "No data yet (0 of 5000 stored events).",
+    "scenarios-h": "Scenarios S2–S3 (simulation, not measured data)",
+    loading: "Loading assumptions…",
+    "scenarios-foot": "The maps and CSVs are published by tools/publish_scenarios.py from out/. Manifest:",
+    "scenarios-schema": ". Intake schema: docs/INGEST_SCHEMA.md.",
+    "show-csv": "Show CSV table", "hide-csv": "Hide table", "download-csv": "download CSV",
+    "showing": "Showing {n} of {m} rows. The full CSV is in the link above.",
+    "csv-fail": "Could not read the CSV: ", "manifest-fail": "Could not load the manifest (static/scenarios.json): ",
+    "stale-fetch": "The intake has not answered for {s} s (last good response: {t}). Is the server still up?",
+    "stale-new": "No new states for {s} s (the last one is from {t}). The server answers: are the firmware and the bridge still up?",
+    "no-fetch": "No intake data has arrived yet ({msg}).",
+    "spark-aria": "Temperature series of the last {n} states: minimum {min} degrees, maximum {max} degrees, latest {last} degrees; reference thresholds T_HI 5.0 and T_LIM 7.5",
+    "spark-note": "last {n} points · min {min} · max {max} · latest {last} °C",
+    "supuestos": "Assumptions (not measured): A=8 W, B+C split 57/43; ambient 25 C; holdover 0.53 h (tau=4.0 h, T_HI=5.0, T_LIM=7.5); charge efficiency 0.85; T_RESERVA = outage length",
+    "s2a-title": "S2a — How much it helps to prioritize the fridge",
+    "s2a-note": "Gain in protected time versus doing nothing, by battery and share of non-critical load (12 h outage).",
+    "s2b-title": "S2b — Does the fridge last the whole outage?",
+    "s2b-note": "Whether protected time covers the outage, by battery and duration.",
+    "s3-title": "S3 — Does it recharge between outages?",
+    "s3-note": "State after one outage a day, by charger and outage length (efficiency 0.85).",
+    "alt-map": "Heat map of scenario {id}: {nota}",
+    "mode-NORMAL": "Mains present. B and C are powered; A is never opened.",
+    "mode-CORTE": "No mains. Only C opens; B stays powered.",
+    "mode-AHORRO": "No mains and total autonomy below T_RESERVA_H: B opens (monotone shedding).",
+    "mode-CRITICO": "No mains and safe time below the minimum: alarm on.",
+    "mode-RESTAURACION": "Mains is back: B closed; C closes after the stagger.",
+    "mode-FALLO_SENSOR": "Power-sensor failure with the mains down: B and C open (conservative), A stays."
+  },
+  "es-419": {
+    title: "ClinicKeep — panel (datos simulados)",
+    skip: "Saltar al contenido", h1: "ClinicKeep — panel de la política de energía",
+    sub: "Ingesta HTTP del firmware (Wokwi / ESP32) y escenarios S2–S3.",
+    "calc-link": "Calculadora de dimensionamiento →",
+    "banner-k": "DATOS SIMULADOS",
+    "banner-s": "— todo lo que muestra este panel viene de la simulación, no de hardware real.",
+    "tabs-label": "Secciones del panel", "tab-status": "Estado", "tab-scenarios": "Escenarios",
+    live: "Lecturas en vivo", "card-mode": "Modo de la política", "no-data": "sin datos",
+    waiting: "Esperando la primera lectura de la ingesta…",
+    "card-zones": "Zonas", "zone-a": "A · nevera de vacunas", "zone-a-state": "sin relé: nunca se corta",
+    "zone-b": "B · luces de pasillo", "zone-c": "C · sala de espera",
+    "zone-note": "En CORTE se abre solo C; B se abre en AHORRO, cuando la autonomía total baja de T_RESERVA_H.",
+    "card-batt": "Batería", "of-charge": "de carga", "soc-note": "SoC reportado por el firmware (soc, 0–1).",
+    "soc-aria": "Estado de carga de la batería",
+    "card-safe": "Horas protegidas (tiempo seguro)", "aut-a": "Autonomía de A", "plus-holo": "+ Holdover térmico",
+    "safe-eq": "Tiempo seguro = autonomía de A + holdover.",
+    "safe-nosensor": "Sin sensor de temperatura no hay holdover: el tiempo seguro es solo la batería.",
+    "safe-with": "Tiempo seguro = autonomía de A + holdover térmico.",
+    protected: "protegidas",
+    holdover: "Aplica a neveras sin forro de hielo (holdover corto). Las neveras PQS con forro de hielo tienen un holdover de horas a días y necesitan menos ayuda.",
+    "card-temp": "Temperatura (sensor ambiente)", "temp-unavailable": "no disponible",
+    "t-hi": "T_HI · techo de control (caja)", "t-lim": "T_LIM · límite seguro (caja)",
+    "temp-note": "El firmware no emite la temperatura en el JSON de serie. Ver docs/INGEST_SCHEMA.md.",
+    "temp-none": "Esperando lecturas de la ingesta…", "temp-bad": "sensor sin lectura",
+    "temp-bad-note": "El firmware reporta temp_ok: false. Sin lectura del DS18B20 no hay holdover térmico, así que el tiempo seguro es solo la autonomía de A.",
+    "temp-old": "Este evento no trae temp_c (formato antiguo de 11 campos, anterior a la Fase 3b). El evento es válido; solo no hay temperatura que mostrar.",
+    "temp-flat": "La serie sale plana porque el DS18B20 del simulador está fijado. No hay variación que dibujar.",
+    "temp-above": "por encima de T_LIM (7.5 °C)", "temp-band": "en la banda de holdover, entre T_HI y T_LIM",
+    "temp-below": "por debajo de T_HI (5.0 °C)",
+    "temp-read": "Lectura {estado}. Ojo con la magnitud: el DS18B20 de esta maqueta mide el ambiente (es el t_amb_c que entra a holdover_h()), y T_HI/T_LIM son umbrales de la caja, que no tiene sensor propio: las líneas son referencia, no un control. T_HI/T_LIM son SUPUESTOS (config.py).",
+    "card-grid": "Red y alarma", grid: "Red eléctrica", alarm: "Alarma", "aut-total": "Autonomía total",
+    "sim-clock": "Reloj SIM (k)",
+    "grid-note": "Con el firmware nuevo se usan sus grid_ok y alarm (etiqueta nativo); si llegan como null (eventos antiguos) se derivan del mode (etiqueta derivado): hay red en NORMAL/RESTAURACION y suena alarma en CRITICO/FALLO_SENSOR, igual que lo calcula policy.py.",
+    "grid-on": "hay red", "grid-off": "sin red", "alarm-on": "activa", "alarm-off": "en reposo",
+    native: "nativo", derived: "derivado", powered: "con energía", unpowered: "sin energía",
+    closed: "cerrado", open: "abierto",
+    timeline: "Línea de tiempo (últimos 50 estados)", "no-rows": "Sin datos todavía.",
+    "th-time": "Hora (servidor)", "th-mode": "Modo", "th-safe": "Tiempo seguro", "th-events": "Eventos de la política",
+    "rows-n": "{n} estados (más reciente primero).",
+    "rows-of": "{n} de {m} estados guardados (más reciente primero).",
+    "rows-empty": "Sin datos todavía (0 de 5000 eventos guardados).",
+    "scenarios-h": "Escenarios S2–S3 (simulación, no datos medidos)",
+    loading: "Cargando supuestos…",
+    "scenarios-foot": "Los mapas y CSV los publica tools/publish_scenarios.py a partir de out/. Manifiesto:",
+    "scenarios-schema": ". Esquema de ingesta: docs/INGEST_SCHEMA.md.",
+    "show-csv": "Ver tabla del CSV", "hide-csv": "Ocultar tabla", "download-csv": "descargar CSV",
+    "showing": "Mostrando {n} de {m} filas. El CSV completo está en el enlace de arriba.",
+    "csv-fail": "No se pudo leer el CSV: ", "manifest-fail": "No se pudo cargar el manifiesto (static/scenarios.json): ",
+    "stale-fetch": "La ingesta no responde desde hace {s} s (última respuesta correcta: {t}). ¿Sigue vivo el servidor?",
+    "stale-new": "Sin estados nuevos desde hace {s} s (el último es de las {t}). El servidor responde: ¿siguen vivos el firmware y el puente?",
+    "no-fetch": "Todavía no llega ningún dato de la ingesta ({msg}).",
+    "spark-aria": "Serie de temperatura de los ultimos {n} estados: minimo {min} grados, maximo {max} grados, ultimo {last} grados; umbrales de referencia T_HI 5.0 y T_LIM 7.5",
+    "spark-note": "ultimos {n} puntos · min {min} · max {max} · ultimo {last} °C",
+    "supuestos": "Supuestos (NO medidos): A=8 W, B+C repartidos 57/43; ambiente 25 C; holdover 0.53 h (tau=4.0 h, T_HI=5.0, T_LIM=7.5); eficiencia de carga 0.85; T_RESERVA = duracion del corte",
+    "s2a-title": "S2a — Cuánto ayuda priorizar la nevera",
+    "s2a-note": "Mejora del tiempo protegido frente a no hacer nada, según batería y % de carga no crítica (corte de 12 h).",
+    "s2b-title": "S2b — ¿La nevera aguanta todo el corte?",
+    "s2b-note": "Si el tiempo protegido cubre la duración del corte, según batería y duración.",
+    "s3-title": "S3 — ¿Alcanza a recargarse entre cortes?",
+    "s3-note": "Estado tras un corte diario según cargador y duración del corte (eficiencia 0.85).",
+    "alt-map": "Mapa de calor del escenario {id}: {nota}",
+    "mode-NORMAL": "Red presente. B y C con energía; A nunca se corta.",
+    "mode-CORTE": "Sin red. Se abre solo C; B sigue con energía.",
+    "mode-AHORRO": "Sin red y autonomía total bajo T_RESERVA_H: se abre B (shedding monótono).",
+    "mode-CRITICO": "Sin red y tiempo seguro bajo el mínimo: alarma activa.",
+    "mode-RESTAURACION": "Volvió la red: B cerrado; C se cierra tras el escalonado.",
+    "mode-FALLO_SENSOR": "Fallo del sensor de potencia con la red caída: B y C abiertos (conservador), A sigue."
+  }
+};
+function t(clave, vars) {
+  const tabla = COPY[lang] || COPY.en;
+  let s = tabla[clave] != null ? tabla[clave] : (COPY.en[clave] != null ? COPY.en[clave] : clave);
+  if (vars) Object.keys(vars).forEach(function (k) { s = s.split("{" + k + "}").join(String(vars[k])); });
+  return s;
+}
+function applyChrome() {
+  document.documentElement.lang = lang;
+  document.title = t("title");
+  document.querySelectorAll("[data-i18n]").forEach(function (node) {
+    const value = t(node.getAttribute("data-i18n"));
+    if (value == null) return;
+    node.textContent = value;
+  });
+  const en = document.getElementById("lang-en");
+  const esBtn = document.getElementById("lang-es");
+  if (en) en.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
+  if (esBtn) esBtn.setAttribute("aria-pressed", lang === "es-419" ? "true" : "false");
+  const grupo = document.querySelector(".lang");
+  if (grupo) grupo.setAttribute("aria-label", lang === "en" ? "Language" : "Idioma");
+  const tabs = document.querySelector("nav.tabs");
+  if (tabs) tabs.setAttribute("aria-label", t("tabs-label"));
+  const meter = document.getElementById("soc-meter");
+  if (meter) meter.setAttribute("aria-label", t("soc-aria"));
+}
 const MODOS = {
-  NORMAL:       { ico: "✓", desc: "Red presente. B y C con energía; A nunca se corta." },
-  CORTE:        { ico: "✕", desc: "Sin red. Se abre solo C; B sigue con energía." },
-  AHORRO:       { ico: "◐", desc: "Sin red y autonomía total bajo T_RESERVA_H: se abre B (shedding monótono)." },
-  CRITICO:      { ico: "!",       desc: "Sin red y tiempo seguro bajo el mínimo: alarma activa." },
-  RESTAURACION: { ico: "↻", desc: "Volvió la red: B cerrado; C se cierra tras el escalonado." },
-  FALLO_SENSOR: { ico: "⚠", desc: "Fallo del sensor de potencia con la red caída: B y C abiertos (conservador), A sigue." }
+  NORMAL:       { ico: "✓", desc: "mode-NORMAL" },
+  CORTE:        { ico: "✕", desc: "mode-CORTE" },
+  AHORRO:       { ico: "◐", desc: "mode-AHORRO" },
+  CRITICO:      { ico: "!", desc: "mode-CRITICO" },
+  RESTAURACION: { ico: "↻", desc: "mode-RESTAURACION" },
+  FALLO_SENSOR: { ico: "⚠", desc: "mode-FALLO_SENSOR" }
 };
 const POLL_MS = 2000;
 const STALE_MS = 10000;
@@ -330,7 +510,7 @@ function hora(iso) {
   return d.toLocaleTimeString() + "." + String(d.getMilliseconds()).padStart(3, "0");
 }
 function onOff(v) {
-  return v ? '<span class="on">con energía</span>' : '<span class="off">sin energía</span>';
+  return v ? '<span class="on">' + t("powered") + "</span>" : '<span class="off">' + t("unpowered") + "</span>";
 }
 
 function pintarModo(ev) {
@@ -339,15 +519,15 @@ function pintarModo(ev) {
   if (!m) {
     badge.className = "badge modo-?";
     badge.querySelector(".ico").textContent = "?";
-    $("modo-texto").textContent = "sin datos";
-    $("modo-desc").textContent = "Esperando la primera lectura de la ingesta…";
+    $("modo-texto").textContent = t("no-data");
+    $("modo-desc").textContent = t("waiting");
     $("modo-extra").textContent = "";
     return;
   }
   badge.className = "badge modo-" + m;
   badge.querySelector(".ico").textContent = MODOS[m].ico;
   $("modo-texto").textContent = m;
-  $("modo-desc").textContent = MODOS[m].desc;
+  $("modo-desc").textContent = t(MODOS[m].desc);
   $("modo-extra").textContent = "t_ms " + ev.t_ms + " · k=" + ev.k + " · " + hora(ev.ts_server);
 }
 
@@ -372,15 +552,12 @@ function sparkline(puntos) {
   const min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
   const ult = puntos[puntos.length - 1].temp_c;
   return '<svg class="spark" role="img" viewBox="0 0 ' + w + " " + h + '" ' +
-    'aria-label="Serie de temperatura de los ultimos ' + puntos.length + ' estados: minimo ' +
-    min.toFixed(1) + ' grados, maximo ' + max.toFixed(1) + ' grados, ultimo ' + ult.toFixed(1) +
-    ' grados; umbrales de referencia T_HI 5.0 y T_LIM 7.5">' +
+    'aria-label="' + t("spark-aria", { n: puntos.length, min: min.toFixed(1), max: max.toFixed(1), last: ult.toFixed(1) }) + '">' +
     guia(T_LIM, "T_LIM 7.5", "end") + guia(T_HI, "T_HI 5.0", "start") +
     '<polyline points="' + linea + '"></polyline>' +
     '<circle cx="' + x(puntos.length - 1).toFixed(1) + '" cy="' + y(ult).toFixed(1) + '" r="2.5"></circle>' +
     "</svg>" +
-    '<p class="note mono">ultimos ' + puntos.length + " puntos · min " + min.toFixed(1) +
-    " · max " + max.toFixed(1) + " · ultimo " + ult.toFixed(1) + " °C</p>";
+    '<p class="note mono">' + t("spark-note", { n: puntos.length, min: min.toFixed(1), max: max.toFixed(1), last: ult.toFixed(1) }) + "</p>";
 }
 
 /* Temperatura: solo si el evento trae temp_c (firmware nuevo). */
@@ -389,58 +566,48 @@ function pintarTemperatura(eventos) {
   const salida = $("temp-texto"), caja = $("temp-serie"), nota = $("temp-nota");
 
   if (!ultimo) {
-    salida.textContent = "sin datos";
+    salida.textContent = t("no-data");
     caja.innerHTML = "";
-    nota.textContent = "Esperando lecturas de la ingesta…";
+    nota.textContent = t("temp-none");
     return;
   }
   if (ultimo.temp_ok === false) {
-    salida.textContent = "sensor sin lectura";
+    salida.textContent = t("temp-bad");
     caja.innerHTML = "";
-    nota.innerHTML = "El firmware reporta <code>temp_ok: false</code>. Sin lectura del DS18B20 no hay " +
-      "holdover térmico, así que el tiempo seguro es solo la autonomía de A.";
+    nota.textContent = t("temp-bad-note");
     return;
   }
   if (typeof ultimo.temp_c !== "number") {
-    salida.textContent = "no disponible";
+    salida.textContent = t("temp-unavailable");
     caja.innerHTML = "";
-    nota.innerHTML = "Este evento no trae <code>temp_c</code> (formato antiguo de 11 campos, anterior a " +
-      "la Fase 3b). El evento es válido; solo no hay temperatura que mostrar.";
+    nota.textContent = t("temp-old");
     return;
   }
 
-  const t = ultimo.temp_c;
-  salida.innerHTML = t.toFixed(1) + ' <span class="unit">°C</span>';
+  const lectura = ultimo.temp_c;
+  salida.innerHTML = lectura.toFixed(1) + ' <span class="unit">°C</span>';
   const conTemp = eventos.filter(e => typeof e.temp_c === "number");
   caja.innerHTML = sparkline(conTemp);
 
   const valores = conTemp.map(e => e.temp_c);
   const plana = valores.length > 1 && Math.min.apply(null, valores) === Math.max.apply(null, valores);
-  if (plana) {
-    caja.innerHTML += '<p class="note">La serie sale plana porque el DS18B20 del simulador está ' +
-      'fijado a ' + t.toFixed(1) + ' °C (<code>diagram.json</code>): no hay variación que dibujar.</p>';
-  }
+  if (plana) caja.innerHTML += '<p class="note">' + t("temp-flat") + " (" + lectura.toFixed(1) + " °C, diagram.json).</p>";
 
-  const estado = t >= T_LIM ? "por encima de T_LIM (7.5 °C)"
-    : t >= T_HI ? "en la banda de holdover, entre T_HI y T_LIM"
-    : "por debajo de T_HI (5.0 °C)";
-  nota.innerHTML = "Lectura " + estado + ". Ojo con la magnitud: el DS18B20 de esta maqueta mide el " +
-    "<strong>ambiente</strong> (es el <code>t_amb_c</code> que entra a <code>holdover_h()</code>), y " +
-    "T_HI/T_LIM son umbrales de la <strong>caja</strong>, que no tiene sensor propio: las líneas son " +
-    "referencia, no un control. T_HI/T_LIM son SUPUESTOS (<code>config.py</code>).";
+  const estado = lectura >= T_LIM ? t("temp-above") : lectura >= T_HI ? t("temp-band") : t("temp-below");
+  nota.textContent = t("temp-read", { estado: estado });
 }
 
 function pintarRedYAlarma(ev) {
   // Nativo si el firmware nuevo lo manda; si no, respaldo derivado del modo.
   const usaRed = datoNativo(ev.grid_ok);
   const red = usaRed ? ev.grid_ok : (ev.mode === "NORMAL" || ev.mode === "RESTAURACION");
-  $("red-texto").innerHTML = red ? '<span class="on">hay red</span>' : '<span class="off">sin red</span>';
-  $("red-origen").textContent = usaRed ? "nativo" : "derivado";
+  $("red-texto").innerHTML = red ? '<span class="on">' + t("grid-on") + "</span>" : '<span class="off">' + t("grid-off") + "</span>";
+  $("red-origen").textContent = usaRed ? t("native") : t("derived");
 
   const usaAlarma = datoNativo(ev.alarm);
   const alarma = usaAlarma ? ev.alarm : (ev.mode === "CRITICO" || ev.mode === "FALLO_SENSOR");
-  $("alarma-texto").innerHTML = alarma ? '<span class="off">activa</span>' : '<span class="on">en reposo</span>';
-  $("alarma-origen").textContent = usaAlarma ? "nativo" : "derivado";
+  $("alarma-texto").innerHTML = alarma ? '<span class="off">' + t("alarm-on") + "</span>" : '<span class="on">' + t("alarm-off") + "</span>";
+  $("alarma-origen").textContent = usaAlarma ? t("native") : t("derived");
 
   $("autotal-texto").textContent = fmtH(ev.aut_total_h);
 }
@@ -461,18 +628,17 @@ function pintar(ev) {
   zona($("zona-b"), ev.relay_b);
   zona($("zona-c"), ev.relay_c);
 
-  $("soc-texto").innerHTML = pct(ev.soc) + ' <span class="unit">de carga</span>';
+  $("soc-texto").innerHTML = pct(ev.soc) + ' <span class="unit">' + t("of-charge") + "</span>";
   $("soc-bar").style.width = Math.max(0, Math.min(1, ev.soc)) * 100 + "%";
   const meter = $("soc-meter");
   meter.setAttribute("aria-valuenow", String(Math.round(ev.soc * 100)));
-  meter.setAttribute("aria-valuetext", pct(ev.soc) + " de carga");
+  meter.setAttribute("aria-label", t("soc-aria"));
+  meter.setAttribute("aria-valuetext", pct(ev.soc) + " " + t("of-charge"));
 
-  $("safe-texto").innerHTML = fmtH(ev.safe_h) + ' <span class="unit">protegidas</span>';
+  $("safe-texto").innerHTML = fmtH(ev.safe_h) + ' <span class="unit">' + t("protected") + "</span>";
   $("auta-texto").textContent = fmtH(ev.aut_a_h);
   $("holo-texto").textContent = fmtH(ev.holdover_h);
-  $("safe-nota").textContent = (ev.holdover_h === null)
-    ? "Sin sensor de temperatura no hay holdover: el tiempo seguro es solo la batería."
-    : "Tiempo seguro = autonomía de A + holdover térmico.";
+  $("safe-nota").textContent = (ev.holdover_h === null) ? t("safe-nosensor") : t("safe-with");
 
   pintarRedYAlarma(ev);
   $("k-texto").textContent = "x" + ev.k;
@@ -481,8 +647,8 @@ function pintar(ev) {
 function pintarTabla(eventos) {
   const cuerpo = document.querySelector("#tabla-eventos tbody");
   $("cap-eventos").textContent = eventos.length
-    ? eventos.length + " estados (más reciente primero)."
-    : "Sin datos todavía.";
+    ? t("rows-n", { n: eventos.length })
+    : t("no-rows");
   cuerpo.innerHTML = eventos.slice().reverse().map(ev => {
     const evs = (ev.events && ev.events.length)
       ? ev.events.map(e => '<span class="tag">' + e + "</span>").join(" ")
@@ -492,8 +658,8 @@ function pintarTabla(eventos) {
       "<td>" + ev.mode + "</td>" +
       '<td class="mono">' + pct(ev.soc) + "</td>" +
       '<td class="mono">' + fmtH(ev.safe_h, 1) + "</td>" +
-      "<td>" + (ev.relay_b ? "cerrado" : "abierto") + "</td>" +
-      "<td>" + (ev.relay_c ? "cerrado" : "abierto") + "</td>" +
+      "<td>" + (ev.relay_b ? t("closed") : t("open")) + "</td>" +
+      "<td>" + (ev.relay_c ? t("closed") : t("open")) + "</td>" +
       "<td>" + evs + "</td>" +
       "</tr>";
   }).join("");
@@ -519,14 +685,14 @@ function revisarFrescura() {
 
   if (edadFetch > STALE_MS) {
     aviso.hidden = false;
-    aviso.textContent = "La ingesta no responde desde hace " + Math.round(edadFetch / 1000) +
-      " s (última respuesta correcta: " + new Date(ultimoOk).toLocaleTimeString() +
-      "). ¿Sigue vivo el servidor?";
+    aviso.textContent = t("stale-fetch", {
+      s: Math.round(edadFetch / 1000), t: new Date(ultimoOk).toLocaleTimeString()
+    });
   } else if (edadNuevo > STALE_MS) {
     aviso.hidden = false;
-    aviso.textContent = "Sin estados nuevos desde hace " + Math.round(edadNuevo / 1000) +
-      " s (el último es de las " + new Date(ultimaNovedad).toLocaleTimeString() +
-      "). El servidor responde: ¿siguen vivos el firmware y el puente?";
+    aviso.textContent = t("stale-new", {
+      s: Math.round(edadNuevo / 1000), t: new Date(ultimaNovedad).toLocaleTimeString()
+    });
   } else {
     aviso.hidden = true;
   }
@@ -549,17 +715,20 @@ async function refrescar() {
       ultimaClave = k;
       ultimaNovedad = Date.now();
     }
+    ultimoEv = nuevo;
+    ultimos = datos.events;
+    totalGuardados = datos.count;
     pintar(nuevo);
     pintarTemperatura(datos.events);
     pintarTabla(datos.events);
     $("cap-eventos").textContent = (datos.events.length || 0) === 0
-      ? "Sin datos todavía (0 de 5000 eventos guardados)."
-      : datos.events.length + " de " + datos.count + " estados guardados (más reciente primero).";
+      ? t("rows-empty")
+      : t("rows-of", { n: datos.events.length, m: datos.count });
   } catch (e) {
     fallosSeguidos++;
     if (!ultimoOk) {
       $("aviso").hidden = false;
-      $("aviso").textContent = "Todavía no llega ningún dato de la ingesta (" + e.message + ").";
+      $("aviso").textContent = t("no-fetch", { msg: e.message });
     } else {
       revisarFrescura();
     }
@@ -590,7 +759,6 @@ tabs.forEach((t, i) => {
 });
 
 /* ---- Escenarios: PNG + CSV como tabla (se cargan al abrir la pestaña) ---- */
-let escenariosCargados = false;
 function parseCSV(texto) {
   const filas = [];
   let fila = [], campo = "", comillas = false;
@@ -616,56 +784,84 @@ function tablaCSV(filas, tope) {
     cuerpo.slice(0, n).map(f => "<tr>" + f.map(v => '<td class="mono">' + v + "</td>").join("") + "</tr>").join("") +
     "</tbody></table></div>";
   if (cuerpo.length > n) {
-    html += "<p class='note'>Mostrando " + n + " de " + cuerpo.length +
-      " filas. El CSV completo está en el enlace de arriba.</p>";
+    html += "<p class='note'>" + t("showing", { n: n, m: cuerpo.length }) + "</p>";
   }
   return html;
 }
-async function cargarEscenarios() {
-  if (escenariosCargados) return;
-  try {
-    const man = await pedir("static/scenarios.json");
-    $("supuestos").textContent = man.supuestos;
-    $("lista-escenarios").innerHTML = man.escenarios.map((s, i) => (
-      "<article class='card'>" +
-        "<h3>" + s.titulo + "</h3>" +
-        "<figure><img src='" + s.png + "' alt='Mapa de calor del escenario " + s.id +
-          ": " + s.nota + "' loading='lazy'></figure>" +
-        "<p class='note'>" + s.nota + "</p>" +
-        "<p><button class='btn' type='button' aria-expanded='false' aria-controls='csv-" + s.id +
-          "' data-csv='" + s.csv + "' data-tabla='csv-" + s.id + "'>Ver tabla del CSV (" +
-          s.filas + " filas)</button> " +
-        "<a href='" + s.csv + "'>descargar CSV</a></p>" +
-        "<div id='csv-" + s.id + "' hidden></div>" +
-      "</article>"
-    )).join("");
-    document.querySelectorAll("button[data-csv]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const caja = document.getElementById(btn.dataset.tabla);
-        if (!caja.hidden) {
-          caja.hidden = true; btn.setAttribute("aria-expanded", "false");
-          btn.textContent = "Ver tabla del CSV";
-          return;
-        }
-        btn.disabled = true;
-        try {
-          const r = await fetch(btn.dataset.csv, { cache: "no-store" });
-          const filas = parseCSV(await r.text());
-          caja.innerHTML = tablaCSV(filas, 500);
-          caja.hidden = false;
-          btn.setAttribute("aria-expanded", "true");
-          btn.textContent = "Ocultar tabla";
-        } catch (e) {
-          caja.innerHTML = "<p class='note'>No se pudo leer el CSV: " + e.message + "</p>";
-          caja.hidden = false;
-        } finally { btn.disabled = false; }
-      });
+const ESC = {
+  s2a_mejora: ["s2a-title", "s2a-note"],
+  s2b_cobertura: ["s2b-title", "s2b-note"],
+  s3_recarga: ["s3-title", "s3-note"]
+};
+function textoEsc(s) {
+  if (lang !== "en" || !ESC[s.id]) return { titulo: s.titulo, nota: s.nota };
+  return { titulo: t(ESC[s.id][0]), nota: t(ESC[s.id][1]) };
+}
+function textoSupuestos(raw) {
+  if (lang === "en" && raw === COPY["es-419"].supuestos) return t("supuestos");
+  return raw;
+}
+function dibujarEscenarios(man) {
+  $("supuestos").textContent = textoSupuestos(man.supuestos);
+  $("lista-escenarios").innerHTML = man.escenarios.map((s) => {
+    const tx = textoEsc(s);
+    return "<article class='card'>" +
+      "<h3>" + tx.titulo + "</h3>" +
+      "<figure><img src='" + s.png + "' alt='" + t("alt-map", { id: s.id, nota: tx.nota }) + "' loading='lazy'></figure>" +
+      "<p class='note'>" + tx.nota + "</p>" +
+      "<p><button class='btn' type='button' aria-expanded='false' aria-controls='csv-" + s.id +
+        "' data-csv='" + s.csv + "' data-tabla='csv-" + s.id + "' data-filas='" + s.filas + "'>" +
+        t("show-csv") + " (" + s.filas + ")</button> " +
+      "<a href='" + s.csv + "'>" + t("download-csv") + "</a></p>" +
+      "<div id='csv-" + s.id + "' hidden></div>" +
+      "</article>";
+  }).join("");
+  document.querySelectorAll("button[data-csv]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const caja = document.getElementById(btn.dataset.tabla);
+      if (!caja.hidden) {
+        caja.hidden = true; btn.setAttribute("aria-expanded", "false");
+        btn.textContent = t("show-csv") + " (" + btn.dataset.filas + ")";
+        return;
+      }
+      btn.disabled = true;
+      try {
+        const r = await fetch(btn.dataset.csv, { cache: "no-store" });
+        const filas = parseCSV(await r.text());
+        caja.innerHTML = tablaCSV(filas, 500);
+        caja.hidden = false;
+        btn.setAttribute("aria-expanded", "true");
+        btn.textContent = t("hide-csv");
+      } catch (e) {
+        caja.innerHTML = "<p class='note'>" + t("csv-fail") + e.message + "</p>";
+        caja.hidden = false;
+      } finally { btn.disabled = false; }
     });
-    escenariosCargados = true;
+  });
+}
+async function cargarEscenarios() {
+  if (manifiesto) return;
+  try {
+    manifiesto = await pedir("static/scenarios.json");
+    dibujarEscenarios(manifiesto);
   } catch (e) {
-    $("supuestos").textContent = "No se pudo cargar el manifiesto (static/scenarios.json): " + e.message;
+    $("supuestos").textContent = t("manifest-fail") + e.message;
   }
 }
+function ponerIdioma(next) {
+  if (next === lang) return;
+  lang = next;
+  applyChrome();
+  pintar(ultimoEv);
+  pintarTemperatura(ultimos);
+  pintarTabla(ultimos);
+  if (ultimos.length) $("cap-eventos").textContent = t("rows-of", { n: ultimos.length, m: totalGuardados });
+  if (manifiesto) dibujarEscenarios(manifiesto);
+  revisarFrescura();
+}
+document.getElementById("lang-en").addEventListener("click", () => ponerIdioma("en"));
+document.getElementById("lang-es").addEventListener("click", () => ponerIdioma("es-419"));
+applyChrome();
 
 /* Enlace directo a una pestaña: /#escenarios */
 function tabInicial() {
