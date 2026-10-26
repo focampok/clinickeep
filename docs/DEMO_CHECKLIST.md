@@ -1,46 +1,38 @@
-# Checklist de demo manual (Wokwi)
+# Manual demo checklist (Wokwi)
 
-Para el video / demo en [wokwi.com](https://wokwi.com) o con el MCP. El corte se
-provoca con el **interruptor deslizante**; el pulsador rojo es un atajo manual y el
-escenario de CI **no** lo usa (ahí el corte va por serie con `GRID0` / `GRID1`).
+Use this for the video or a live demo on [wokwi.com](https://wokwi.com), or through the Wokwi MCP. Cause the outage with the **slide switch**. The red button is a manual shortcut. The CI scenario does **not** use it: CI drops and restores the grid over serial with `GRID0` / `GRID1`.
 
-Recuerda: `config.py` y `policy.py` son copias de la raíz del repo. Si tocas la
-política, corre `python3 wokwi/build_firmware.py` antes de simular.
+`config.py` and `policy.py` inside `wokwi/` are copies of the repository root. If you change the policy, run `python3 wokwi/build_firmware.py` before simulating.
 
-## Antes de empezar
+## Before you start
 
-1. Proyecto `wokwi/` abierto (ESP32 DevKit C V4 + MicroPython).
-2. `firmware.bin` reconstruido si cambió algún `.py`:
+1. Open the `wokwi/` project (ESP32 DevKit C V4 + MicroPython).
+2. Rebuild `firmware.bin` if any `.py` file changed:
    `python3 wokwi/build_firmware.py`.
-3. Monitor serie visible (imprime un JSON por segundo).
+3. Keep the serial monitor visible. It prints one JSON object per second.
 
-## Pasos
+## Steps
 
-| # | Qué haces | Qué debe verse |
+| # | What you do | What you should see |
 |---|---|---|
-| 0 | Pulsa Start | ~2 s con **ambas cargas sin energía** (ventana de arranque seguro) y luego `NORMAL`. Es lo esperado y es la propiedad de seguridad. |
-| 1 | Interruptor a la **izquierda** (hay red) | OLED: `NORMAL`, `SoC 100%`, `B:ON C:ON`, badge `SIM x1`. LEDs verde (B) y amarillo (C) **encendidos**. Serie: `"mode": "NORMAL"`, `relay_b`/`relay_c` en `true`. |
-| 2 | Interruptor a la **derecha** (corte) | A los ~2 s: modo `CORTE`. El LED amarillo (C, sala de espera) se **apaga**; el verde (B) sigue encendido. Serie: `events: ["grid_down","shed_c"]`. |
-| 3 | Pulsa **SIM k** (o tecla `K`) hasta `SIM x600` | El reloj simulado corre ×600. A los ~12 s: modo `AHORRO` y el LED verde (B) se **apaga**: las dos cargas no críticas quedan sin energía. |
-| 4 | Espera | A los ~60 s (reales) desde el corte: modo `CRITICO` y **suena el buzzer**. A (nevera) **nunca** se apaga. |
-| 5 | Interruptor de vuelta a la **izquierda** (vuelve la red) | A los ~5 s: `RESTAURACION` y el LED verde (B) se enciende. 3 s después se cierra C (`NORMAL`, ambos LEDs encendidos). El buzzer se apaga. |
-| 6 | Gira el potenciómetro (GPIO35) | Cambia la potencia de A (0–20 W; ~40 % ≈ 8 W). Con más potencia, el corte llega antes a `AHORRO`. |
+| 0 | Press Start | About 2 s with **both non-critical loads unpowered** (the safe-start window), then `NORMAL`. That is expected. It is the safety property. |
+| 1 | Switch to the **left** (grid present) | OLED: `NORMAL`, `SoC 100%`, `B:ON C:ON`, badge `SIM x1`. Green LED (B) and yellow LED (C) **on**. Serial: `"mode": "NORMAL"`, `relay_b` and `relay_c` `true`. |
+| 2 | Switch to the **right** (outage) | After about 2 s: mode `CORTE`. The yellow LED (C, waiting room) goes **off**. The green LED (B) stays on. Serial: `events: ["grid_down","shed_c"]`. |
+| 3 | Press **SIM k** (or the `K` key) until `SIM x600` | The simulated clock runs at ×600. After about 12 s: mode `AHORRO` and the green LED (B) goes **off**. Both non-critical loads are now unpowered. |
+| 4 | Wait | About 60 s of real time after the outage: mode `CRITICO` and the **buzzer sounds**. A (the fridge) **never** turns off. |
+| 5 | Switch back to the **left** (grid returns) | After about 5 s: `RESTAURACION` and the green LED (B) turns on. 3 s later C closes (`NORMAL`, both LEDs on). The buzzer stops. |
+| 6 | Turn the potentiometer (GPIO35) | Zone A power changes (0–20 W; about 40% ≈ 8 W). At a higher power, the outage reaches `AHORRO` sooner. |
 
-El pulsador rojo **CORTE manual** (o la tecla `G`) hace lo mismo que el paso 2 sin
-mover el interruptor. Si el interruptor ya está en "hay red", el pulsador manda:
-mientras está pulsado, la red se considera caída.
+The red **manual outage** button (or the `G` key) does the same thing as step 2 without moving the switch. If the switch is already on "grid present", the button wins: while it is held, the grid counts as down.
 
-## Qué NO debería pasar nunca
+## What must never happen
 
-- Que la zona A se quede sin energía por decisión del software: `relay_a` siempre
-  es `true` y A no tiene relé.
-- Que B se reabra y se vuelva a cerrar durante un corte (el shedding es monótono).
-- Que al arrancar las cargas no críticas queden con energía antes de la primera
-  decisión de la política (ventana de arranque seguro).
+- Zone A loses power because the software decided so. `relay_a` is always `true`, and A has no relay.
+- B opens and then closes again during an outage. Shedding is monotone.
+- On startup, the non-critical loads are powered before the policy's first decision. That window is the safe start.
 
-## Comandos serie útiles
+## Useful serial commands
 
-`GRID0` (sin red) · `GRID1` (hay red) · `GRID` (vuelve a leer el interruptor) ·
-`K=1` · `K=60` · `K=600`.
+`GRID0` (grid down) · `GRID1` (grid present) · `GRID` (read the switch again) · `K=1` · `K=60` · `K=600`.
 
-Son los que usa `wokwi/scenario_accept.yaml` para el corte y la restauración.
+`wokwi/scenario_accept.yaml` uses these for the outage and the restore.

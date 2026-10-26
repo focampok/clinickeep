@@ -1,128 +1,139 @@
-# ClinicKeep - núcleo de política (paso 1)
+# ClinicKeep
 
-Política de prioridad de energía para una clínica con cortes. Está escrita para
-correr **igual en MicroPython (ESP32 en Wokwi) y en Python normal**, así el firmware
-y el motor de escenarios usan exactamente el mismo código.
+ClinicKeep is an energy-priority policy for a clinic that loses the grid. The same code runs in MicroPython on an ESP32 in Wokwi and in ordinary Python, so the firmware and the scenario engine share one policy.
 
-## Archivos
+When the grid fails, the waiting room opens first, then the hallway lights. The vaccine fridge is never opened by software. The policy estimates how long the fridge can still run, and how long the box stays inside the safe band after that. It reports a duration, not a clock time.
 
-| Archivo | Qué es |
+It does not generate energy. It is not a certified medical device, and it does not use machine learning. With a long outage the limit is still the battery. The physical prototype is the next step. What ships here is the policy, the simulated firmware, the scenario sweeps, and a sizing calculator.
+
+Zones, as named in `policy.py`: **A** vaccine fridge (critical), **B** hallway lights, **C** waiting room. States: `NORMAL`, `CORTE`, `AHORRO`, `CRITICO`, `RESTAURACION`, `FALLO_SENSOR`.
+
+## What you can open
+
+Everything a visitor can click shows a **simulation**. The live dashboard says so in a permanent banner. It is not a feed from a clinic.
+
+| Where | What |
 |---|---|
-| `config.py` | Parámetros (todos son supuestos de partida; citar fuente o declararlos) |
-| `policy.py` | Máquina de estados, reloj SIM, autonomía, holdover y tiempo seguro |
-| `tests/test_policy.py` | 14 pruebas de la política |
-| `demo.py` | Un corte simulado y comparación CON vs SIN ClinicKeep |
-| `scenarios.py` | Motor de escenarios S2a/S2b/S3 (usa la misma `policy.step`) -> CSV |
-| `plots.py` | Mapas de calor (matplotlib) |
-| `tests/test_scenarios.py` | Validación contra fórmula cerrada y monotonía |
-| `tests/test_sync.py` | `wokwi/policy.py` y `config.py` idénticos a la raíz |
-| `PROMPT_correcciones.md` | Prompt para el agente: 4 correcciones de la Fase 1 |
-| `tools/gen_pinout.py` | Genera `docs/PINOUT.md` y `docs/SCHEMA.md` desde el diagrama |
-| `calc/index.html` + `calc/calc.js` | Calculadora de dimensionamiento (JS puro, sin build): horas protegidas sin/con ClinicKeep, si cubre el corte y si alcanza el cargador. Se sirve en `/calc` |
-| `calc/test_calc.mjs` | Compara `calc.js` fila a fila con los CSV de `scenarios.py` (Node, sin dependencias) |
-| `tests/test_calc_js.py` | Enlaza esa comparación con pytest (se omite sin `node`) y vigila las etiquetas de los supuestos |
-| `tests/test_calc_html.py` | Lo que la página tiene que tener: aviso de simulación, pie, tema claro/oscuro, teclado, 360 px, copiar y CSV |
-| `tools/publish_calc.py` | Copia `calc/` a `server/static/calc/` y avisa si los supuestos se separan de `scenarios.py`/`config.py` |
-| `docs/FUENTES_PENDIENTES.md` | Supuestos sin fuente, y qué haría falta para citar cada uno |
-| `docs/PINOUT.md` | Pinout GPIO ↔ señal (generado; no editar a mano) |
-| `docs/SCHEMA.md` | Esquema del circuito en texto + enlace al proyecto Cirkit |
-| `docs/RELAY_CHECK.md` | Polaridad de los relés y estado seguro (medido en simulador) |
-| `docs/DEMO_CHECKLIST.md` | Pasos de la demo manual (qué mover y qué debe verse) |
+| [clinickeep.focampo.com](https://clinickeep.focampo.com) | Read-only dashboard. Railway backup: [clinickeep-production.up.railway.app](https://clinickeep-production.up.railway.app) |
+| [/calc](https://clinickeep.focampo.com/calc) | Sizing calculator. Every input is marked `FUENTE`, `SUPUESTO`, or computed |
+| `site/` | Static project sheet, in English, with a control for Latin American Spanish. Netlify publishes this directory (`netlify.toml`) |
+| This repository | Policy, tests, Wokwi project, and the scenario engine |
 
-## Cómo correrlo en Linux
+Further reading for a judge: [manual demo](docs/DEMO_CHECKLIST.md), [what is cited and what is not](docs/FUENTES_PENDIENTES.md), [how the live service is deployed](README_DEPLOY.md).
 
-```
+## The didactic result
+
+Assumptions, not measurements: 96 Wh usable, A = 8 W, B = 4 W, C = 3 W, holdover 0.53 h.
+
+| | Fridge runs out of energy | Protected hours (with holdover) |
+|---|---|---|
+| Without ClinicKeep | 6.4 h | 6.9 h |
+| With ClinicKeep | 11.0 h | 11.5 h |
+
+The +66% figure is this cell's protected hours, 6.9 h to 11.5 h. It depends on how much non-critical load B and C draw. When that load is 0%, the improvement is 0%. Less load in B and C means a smaller benefit. The sweep is scenario S2a, below.
+
+## Design rules
+
+1. **A (the fridge) is never opened by software.** `relay_a` is always `True`.
+2. **Shedding during an outage is monotone.** B does not close again until the grid returns. When the grid drops, only C opens. B opens in `AHORRO`, when total autonomy falls below `T_RESERVA_H` (6 h, a starting assumption).
+3. **Confirm timers in real time; account for energy in simulated time** (`k`, the SIM clock: 1, 60, or 600).
+4. **Safe time = autonomy of A + thermal holdover**, both on the same clock.
+5. If the power sensor fails while the grid is down, the conservative mode opens B and C and keeps A. If the temperature sensor fails, only the holdover disappears.
+
+Alerts are durations ("move the vaccines in X h Y min"), not wall-clock times.
+
+## Run it on Linux
+
+```bash
 cd clinickeep
 python3 -m venv .venv
 source .venv/bin/activate
 pip install pytest matplotlib
-pytest -q          # 88 pasan (sin node instalado: 83 y 5 omitidas)
-python3 demo.py    # tabla del corte y comparación con/sin ClinicKeep
+pytest -q          # 88 passed (without node: 83 passed, 5 skipped)
+python3 demo.py    # one simulated outage, with and without ClinicKeep
 ```
 
-## Reglas de diseño
+## Run it in Wokwi
 
-1. **A (nevera) nunca se corta por software.** `relay_a` siempre es `True`.
-2. **El shedding es monótono** durante un corte: B no se reabre hasta que vuelva la red. Al caer la red se abre **solo C**; **B** se abre en AHORRO, cuando la autonomía total baja de `T_RESERVA_H` (6 h).
-3. **Temporizadores en tiempo real; energía en tiempo simulado** (`k`, el reloj SIM).
-4. **Tiempo seguro = autonomía de A + holdover**, ambos en el mismo reloj.
-5. Si falla el sensor de potencia con la red caída: modo conservador (se abren B y C, A sigue).
-   Si falla el de temperatura: solo desaparece el holdover.
+The project is in `wokwi/` (ESP32 DevKit C V4 + MicroPython). `config.py` and `policy.py` there are **copies of the repository root**. Do not edit them in `wokwi/`. `build_firmware.py` copies them before packing (`--sync-only` only syncs), and `tests/test_sync.py` fails if they diverge.
 
-## Cómo correr en Wokwi
+Pinout: `docs/PINOUT.md`. Circuit: `docs/SCHEMA.md`. Relay polarity: `docs/RELAY_CHECK.md`. Step-by-step demo: `docs/DEMO_CHECKLIST.md`.
 
-El proyecto está en `wokwi/` (ESP32 DevKit C V4 + MicroPython). `config.py` y
-`policy.py` son **copias de la raíz**: no se editan en `wokwi/`. `build_firmware.py`
-las copia antes de empaquetar (con `--sync-only` solo sincroniza), y `tests/test_sync.py`
-falla si divergen.
+**The INA219 is future hardware.** Wokwi has no such part. In the simulation, zone A power is **emulated with a potentiometer** (GPIO35), behind `read_power_a_w()`. The real sensor would sit on the I²C bus shared with the OLED (address 0x40), in series with the zone A load. Integrating it replaces that function only. The policy stays untouched.
 
-Pinout: `docs/PINOUT.md`. Esquema del circuito: `docs/SCHEMA.md`. Polaridad de los
-relés: `docs/RELAY_CHECK.md`. Demo manual paso a paso: `docs/DEMO_CHECKLIST.md`.
+### Import on wokwi.com
 
-**El INA219 es hardware FUTURO.** Wokwi no tiene ese componente: en la simulación la
-potencia de la zona A se **emula con un potenciómetro** (GPIO35), siempre detrás de la
-capa de abstracción (`read_power_a_w()`). El sensor real va en el bus I²C compartido con
-la OLED (dirección 0x40) y en serie con la carga de A; al integrarlo se reemplaza solo
-esa función y la política no se toca.
+1. Create a **MicroPython ESP32** project on [wokwi.com](https://wokwi.com).
+2. Copy into the project: `diagram.json`, `main.py`, `config.py`, `policy.py`, `ssd1306.py`.
+3. Press Start. The OLED should show `NORMAL`, state of charge, B/C, and the badge `SIM x1`.
+4. Manual demo (full table in `docs/DEMO_CHECKLIST.md`):
+   - Slide switch (GPIO34): left = grid present; right = outage. **This is the control to use on camera.**
+   - Red **manual outage** button (GPIO14) or the `G` key: a shortcut for a grid loss. **Manual only.** The CI scenario does not use it. CI drops the grid over serial with `GRID0` / `GRID1`.
+   - Blue **SIM k** button (GPIO13) or the `K` key: cycles `k` through 1 → 60 → 600.
+   - Potentiometer (GPIO35): zone A power, 0–20 W; about 40% ≈ 8 W.
+5. The serial monitor prints JSON once a second (`t_ms`, `k`, `mode`, `soc`, relays, and the rest).
 
-### En wokwi.com (importar)
-
-1. Crea un proyecto **MicroPython ESP32** en [wokwi.com](https://wokwi.com).
-2. Copia al proyecto: `diagram.json`, `main.py`, `config.py`, `policy.py`, `ssd1306.py`.
-3. Pulsa Start. En la OLED deberías ver `NORMAL`, SoC, B/C y el badge `SIM x1`.
-4. Demo manual (paso a paso en `docs/DEMO_CHECKLIST.md`):
-   - Interruptor deslizante (GPIO34): izquierda = hay red; derecha = corte.
-     **Es el control que se usa en el video.**
-   - Pulsador rojo **CORTE manual** (GPIO14) o tecla `G`: atajo para simular la
-     caída de red. **Solo manual**: el escenario de CI no lo usa, provoca el corte
-     por serie con `GRID0` / `GRID1`.
-   - Pulsador azul **SIM k** (GPIO13) o tecla `K`: cicla `k` en 1 → 60 → 600.
-   - Potenciómetro (GPIO35): potencia de A (0–20 W); ~40 % ≈ 8 W.
-5. El monitor serie imprime JSON cada segundo (`t_ms`, `k`, `mode`, `soc`, relés, etc.).
-
-### Con Wokwi CLI / MCP (local)
+### Wokwi CLI / MCP, locally
 
 ```bash
 cd wokwi
-pip install littlefs-python   # solo para empaquetar el filesystem
-python3 build_firmware.py    # descarga MicroPython y genera firmware.bin
+pip install littlefs-python   # only to pack the filesystem
+python3 build_firmware.py    # downloads MicroPython and writes firmware.bin
 export WOKWI_CLI_TOKEN=wok_...   # https://wokwi.com/dashboard/ci
 wokwi-cli . --scenario scenario_accept.yaml --timeout 120000
 ```
 
-Comandos serie opcionales (CI): `GRID0` / `GRID1` / `GRID`, `K=1` / `K=60` / `K=600`.
+Optional serial commands for CI: `GRID0` / `GRID1` / `GRID`, `K=1` / `K=60` / `K=600`.
 
-### Criterios de aceptación (verificados en simulador)
+### Acceptance criteria (checked in the simulator)
 
-| # | Criterio | Resultado |
+| # | Criterion | Result |
 |---|---|---|
-| 1 | Con red: B y C cerrados, modo NORMAL | OK |
-| 2 | Al cortar: ~2 s reales → C abre, modo CORTE | OK (~2.0 s) |
-| 3 | Con k=600: ~12 s → AHORRO (B abre); ~60 s → CRITICO + alarma | OK (~12 s / ~62 s) |
-| 4 | A nunca se abre (`relay_a` siempre true) | OK |
-| 5 | Al volver la red: 5 s → cierra B; +3 s → cierra C; NORMAL | OK |
+| 1 | Grid present: B and C closed, mode `NORMAL` | OK |
+| 2 | On outage: ~2 s of real time, then C opens, mode `CORTE` | OK (~2.0 s) |
+| 3 | With k=600: ~12 s to `AHORRO` (B opens); ~60 s to `CRITICO` plus the alarm | OK (~12 s / ~62 s) |
+| 4 | A never opens (`relay_a` always true) | OK |
+| 5 | Grid returns: 5 s, then B closes; +3 s, then C closes; `NORMAL` | OK |
 
-Log de la corrida: `evidence/wokwi_accept_serial.log`.
+Run log: `evidence/wokwi_accept_serial.log`.
 
-## Resultado del demo (supuestos: 96 Wh; A=8 W, B=4 W, C=3 W; holdover 0.53 h)
+## Declared simplifications
 
-| | A sin energía | Horas protegidas (con holdover) |
-|---|---|---|
-| Sin ClinicKeep | 6.4 h | 6.9 h |
-| Con ClinicKeep | 11.0 h | 11.5 h |
+- In the policy demo the battery returns to 100% when the grid returns. The calculator models recharge separately.
+- The thermal parameters (`TAU_H` and the temperature limits) are assumptions. They need a vaccine-fridge datasheet, or they must stay declared as a range. The holdover model is a single thermal mass, τ = 4 h, for a box **without an ice lining**. A PQS fridge with an ice lining holds for hours to days and would need less of this help. Stating the short holdover is the conservative claim.
 
-La mejora (+66 %) depende de cuánta carga no crítica exista: con menos carga en B y C,
-el beneficio baja. Ese barrido es el experimento S2 del plan.
+## Scenarios
 
-## Simplificaciones declaradas
+These are sensitivity sweeps, not a forecast of outages. Inputs are assumptions unless a row in [docs/FUENTES_PENDIENTES.md](docs/FUENTES_PENDIENTES.md) marks them `FUENTE`.
 
-- La batería vuelve a 100 % cuando se restaura la red (la recarga real se modela en el
-  chequeo de recarga de la calculadora).
-- Los parámetros térmicos (`TAU_H`, límites) son supuestos; hay que tomarlos de la ficha
-  técnica de una nevera de vacunas o declarar un rango.
+- **S2a.** Improvement against battery size and the share of non-critical load, for a 12 h outage. On the didactic profile (408 rows) the mean is about +51%, from 0% (no non-critical load) to about +373% at the extreme cell.
+- **S2b.** Which outages the fridge still covers.
+- **S3.** Recharge between outages (one outage a day, charge efficiency 0.85, 156 cells). The honest result: recharge barely depends on ClinicKeep (1 of 156 cells). It depends on outage length and charger size.
 
-## Escenarios (supuestos, NO datos medidos)
+The 7.23 h → 12.70 h reading is a separate offline case for a domestic fridge. It is not the demo above, and it is not a vaccine fridge. Prefer the table in this file.
 
-Análisis de sensibilidad, no predicción de cortes. S2a: mejora vs batería y % de carga no crítica (corte 12 h).
-S2b: qué cortes cubre la nevera. S3: recarga entre cortes (1 corte/día, eficiencia 0.85).
-Hallazgo honesto de S3: casi no depende de ClinicKeep (1 de 156 celdas); depende de duración del corte y del cargador.
+## Files
+
+| File | What it is |
+|---|---|
+| `config.py` | Parameters. All of them start as assumptions; cite a source or keep them declared |
+| `policy.py` | State machine, SIM clock, autonomy, holdover, and safe time |
+| `tests/test_policy.py` | 14 tests of the policy |
+| `demo.py` | One simulated outage, with and without ClinicKeep |
+| `scenarios.py` | S2a / S2b / S3 engine (the same `policy.step`) → CSV |
+| `plots.py` | Heatmaps (matplotlib) |
+| `tests/test_scenarios.py` | Checks against a closed-form result, and monotonicity |
+| `tests/test_sync.py` | `wokwi/policy.py` and `config.py` match the root copies |
+| `PROMPT_correcciones.md` | Agent prompt: four corrections from phase 1 |
+| `tools/gen_pinout.py` | Generates `docs/PINOUT.md` and `docs/SCHEMA.md` from the diagram |
+| `calc/index.html` + `calc/calc.js` | Sizing calculator (plain JS, no build): protected hours with and without ClinicKeep, whether the outage is covered, and whether the charger keeps up. Served at `/calc` |
+| `calc/test_calc.mjs` | Compares `calc.js` row by row with the CSVs from `scenarios.py` (Node, no dependencies) |
+| `tests/test_calc_js.py` | Hooks that comparison into pytest (skipped without `node`) and watches the assumption labels |
+| `tests/test_calc_html.py` | What the page must contain: simulation notice, footer, light/dark theme, keyboard, 360 px, copy, and CSV |
+| `tools/publish_calc.py` | Copies `calc/` to `server/static/calc/` and warns if assumptions drift from `scenarios.py` / `config.py` |
+| `docs/FUENTES_PENDIENTES.md` | Assumptions that still have no source, and what a citation would require |
+| `docs/PINOUT.md` | GPIO pinout (generated; do not edit by hand) |
+| `docs/SCHEMA.md` | Circuit in text, plus the Cirkit project link |
+| `docs/RELAY_CHECK.md` | Relay polarity and the safe state (measured in the simulator) |
+| `docs/DEMO_CHECKLIST.md` | Manual demo: what to move, and what should appear |
+| `site/` | Static landing page. `netlify.toml` sets the publish directory to `site`, with no build command |
