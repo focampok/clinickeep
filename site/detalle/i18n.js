@@ -2,6 +2,7 @@
   var copy = {
     en: {
       wordmark: "CLINICKEEP",
+      "back-case": "← Case",
       subtitle: "PERFORMANCE SPECIFICATION · SIMULATED PROTOTYPE",
       disclaimer: "Not a certified device. Simulated. Does not generate energy.",
       "th-item": "ITEM",
@@ -81,6 +82,7 @@
     },
     "es-419": {
       wordmark: "CLINICKEEP",
+      "back-case": "← Caso",
       subtitle: "ESPECIFICACIÓN DE DESEMPEÑO · PROTOTIPO SIMULADO",
       disclaimer: "No es un dispositivo certificado. Simulado. No genera energía.",
       "th-item": "ÍTEM",

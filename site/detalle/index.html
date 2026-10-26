@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClinicKeep — performance specification</title>
+<meta name="description" content="When the grid fails, ClinicKeep keeps the vaccine fridge powered. Simulated prototype. Not a certified device.">
+<link rel="stylesheet" href="spec.css">
+<style>
+  body { font-size: 1.125rem; line-height: 1.5; }
+  h1 { font-size: 41px; line-height: 1.15; }
+  h2 { font-size: 2rem; line-height: 1.3; }
+</style>
+</head>
+<body>
+<nav style="max-width:1280px;margin:0 auto;padding:14px 24px;font:600 16px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <a href="/" data-i18n="back-case" style="color:#24557a;text-decoration:none">← Case</a>
+</nav>
+<a class="skip" href="#rest">Skip to the specification</a>
+<main class="sheet" id="sheet">
+  <div class="r-wordmark"><h1 class="semantic" data-i18n="wordmark">CLINICKEEP</h1></div>
+  <div class="r-subtitle"><p class="semantic" data-i18n="subtitle">PERFORMANCE SPECIFICATION · SIMULATED PROTOTYPE</p></div>
+  <div class="r-mast-rule" aria-hidden="true"><span class="rule-draw"></span></div>
+  <div class="r-disclaimer"><p class="semantic" data-i18n="disclaimer">Not a certified device. Simulated. Does not generate energy.</p></div>
+  <div class="r-lang">
+    <div class="semantic lang" role="group" aria-label="Language">
+      <button type="button" id="lang-en" aria-pressed="true" lang="en">EN</button>
+      <button type="button" id="lang-es" aria-pressed="false" lang="es-419">ES</button>
+    </div>
+  </div>
+
+  <div class="r-a-letter"><p class="semantic zone-letter">A</p></div>
+  <figure class="r-zone-a zone-plate">
+    <img src="plates/zone-a.png" alt="Line drawing of a vaccine fridge and a power symbol.">
+  </figure>
+  <div class="r-a-caption"><p class="semantic caption" data-i18n="cap-a">A 8 W<br>VACCINE FRIDGE</p></div>
+
+  <div class="r-b-letter"><p class="semantic zone-letter">B</p></div>
+  <figure class="r-zone-b zone-plate">
+    <img src="plates/zone-b.png" alt="Line drawing of a hallway lamp and a power symbol.">
+  </figure>
+  <div class="r-b-caption"><p class="semantic caption" data-i18n="cap-b">B 4 W<br>HALLWAY LAMP</p></div>
+
+  <div class="r-c-letter"><p class="semantic zone-letter">C</p></div>
+  <figure class="r-zone-c zone-plate">
+    <img src="plates/zone-c.png" alt="Line drawing of a waiting-room lamp and a power symbol.">
+  </figure>
+  <div class="r-c-caption"><p class="semantic caption" data-i18n="cap-c">C 3 W<br>WAITING-ROOM LAMP</p></div>
+
+  <div class="r-table-upper semantic">
+    <table class="spec-table">
+      <colgroup><col class="item"><col class="val"><col class="mark"></colgroup>
+      <thead>
+        <tr>
+          <th scope="col" data-i18n="th-item">ITEM</th>
+          <th scope="col" data-i18n="th-value">VALUE</th>
+          <th scope="col" data-i18n="th-mark">MARK</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-i18n="row-battery">Battery</td>
+          <td>96 Wh</td>
+          <td class="mark" data-i18n="mark-assumed">ASSUMED</td>
+        </tr>
+        <tr>
+          <td data-i18n="row-power">Fridge power</td>
+          <td>8 W</td>
+          <td class="mark" data-i18n="mark-assumed">ASSUMED</td>
+        </tr>
+        <tr>
+          <td data-i18n="row-without">Without ClinicKeep</td>
+          <td>6.4 h</td>
+          <td class="mark" data-i18n="computed">computed</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="r-table-lower semantic">
+    <table class="spec-table">
+      <colgroup><col class="item"><col class="val"><col class="mark"></colgroup>
+      <tbody>
+        <tr class="limit">
+          <td data-i18n="row-with">With ClinicKeep</td>
+          <td>11.0 h</td>
+          <td class="mark" data-i18n="computed-2">computed</td>
+        </tr>
+        <tr>
+          <td data-i18n="row-tau">Holdover model, tau</td>
+          <td>4 h</td>
+          <td class="mark" data-i18n="mark-assumed">ASSUMED</td>
+        </tr>
+        <tr>
+          <td data-i18n="row-gt">Guatemala outages, 1.3 per month, firms, 2017</td>
+          <td data-i18n="row-gt-v">1.3 per month</td>
+          <td class="mark" data-i18n="mark-source">SOURCE</td>
+        </tr>
+        <tr>
+          <td data-i18n="row-zero">Improvement</td>
+          <td data-i18n="row-zero-v">0% when non-critical load is 0%</td>
+          <td class="mark" data-i18n="computed-3">computed</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <a class="r-demo-link semantic demo-link" href="https://clinickeep.focampo.com" data-i18n="demo">Open the simulated demo →</a>
+</main>
+
+<article class="rest" id="rest">
+  <section class="clause">
+    <h2 data-i18n="h-outage">The outage</h2>
+    <p data-i18n="p-outage">A health post that loses the grid still has to keep vaccines between +2 and +8 °C. Guatemala averaged 1.3 outages a month in 2017. That figure is from the World Bank Enterprise Surveys, firms, not clinics, and it does not say how long the outages lasted.</p>
+  </section>
+  <section class="clause">
+    <h2 data-i18n="h-policy">The policy</h2>
+    <p data-i18n="p-policy">ClinicKeep decides on the device, in the same policy module that runs on the ESP32 and in the scenario engine. The network only reports. Zone A, the vaccine fridge, is never opened by software. About two seconds after the grid fails, only zone C, the waiting room, opens. Zone B, the hallway lights, opens later, when total autonomy falls under 6 hours. That threshold is a starting assumption. Once B opens, it stays open until the grid returns.</p>
+    <p data-i18n="p-safe">Safe time is the fridge’s remaining autonomy plus a thermal holdover, on the same clock, said as a duration: move the vaccines in X h Y min. A failed temperature sensor removes the holdover only. A failed power sensor while the grid is down opens B and C and keeps A.</p>
+    <table>
+      <thead>
+        <tr><th data-i18n="th-state">State</th><th data-i18n="th-when">When</th><th data-i18n="th-does">What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>NORMAL</td><td data-i18n="st-n">Grid present and stable for 5 s</td><td data-i18n="st-nd">A, B, and C closed</td></tr>
+        <tr><td>CORTE</td><td data-i18n="st-c">Grid absent for 2 s</td><td data-i18n="st-cd">C opens. Energy accounting starts</td></tr>
+        <tr><td>AHORRO</td><td data-i18n="st-a">Total autonomy under 6 h</td><td data-i18n="st-ad">B opens. A stays closed</td></tr>
+        <tr><td>CRITICO</td><td data-i18n="st-k">Safe time under 1 h</td><td data-i18n="st-kd">Alarm: move the vaccines in the time that remains</td></tr>
+        <tr><td>RESTAURACION</td><td data-i18n="st-r">Grid stable again</td><td data-i18n="st-rd">B closes, then C, 3 s later</td></tr>
+        <tr><td>FALLO_SENSOR</td><td data-i18n="st-f">Power readings fail</td><td data-i18n="st-fd">With the grid down: open B and C, keep A</td></tr>
+      </tbody>
+    </table>
+    <p data-i18n="p-sim">The timers above are real seconds. The energy uses a simulated clock, badged SIM ×k, at 1, 60, or 600. The badge stays visible because the hours are not a wall-clock measurement.</p>
+  </section>
+  <section class="clause">
+    <h2 data-i18n="h-evidence">What the same battery does</h2>
+    <p data-i18n="p-demo">The didactic demo assumes 96 Wh, A at 8 W, B at 4 W, C at 3 W, and a holdover of about 0.53 h. The fridge runs out of energy at 6.4 h without ClinicKeep and at 11.0 h with it. With the holdover added, protected hours are 6.9 h and 11.5 h. That gain needs non-critical load. At 0% non-critical load the improvement is 0%.</p>
+    <p data-i18n="p-s2">Across 408 rows of the didactic sweep, the mean improvement is about +51%, from 0% up to about +373% in the extreme cell. A second sweep, one outage a day, shows that recharging barely depends on ClinicKeep. It depends on how long the outage is and how large the charger is.</p>
+    <p data-i18n="p-hold">The holdover is a single thermal mass, tau 4 h, an assumption, for a box without an ice lining. A PQS fridge with an ice lining holds for hours to days and needs less of this help. 7.5 °C, used as the model’s limit, is this project’s own margin under 8 °C. The PQS document gives the +2 to +8 °C band and measures holdover to +10 °C. It does not give 7.5. The 35 W figure cited for one AC vaccine fridge is WHO PQS E003-066, 0.85 kWh per 24 h. It is not the 8 W of the didactic demo.</p>
+  </section>
+  <section class="clause">
+    <h2 data-i18n="h-open">The opening</h2>
+    <p data-i18n="p-open">The firmware is MicroPython on an ESP32, exercised in Wokwi. A switch stands in for the grid. A potentiometer stands in for a future power sensor on zone A. An OLED shows the state with no network. The public dashboard only displays what the device already decided. The calculator asks whether a battery and a charger cover the outage you type in, and it labels every input FUENTE or SUPUESTO.</p>
+    <figure class="circuit">
+      <ol class="net">
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><path d="M2 18h10M36 18h10M12 18 L28 8"/></svg>
+          <div><p class="part-name" data-i18n="c-sw">Grid switch</p><p class="part-pin" data-i18n="c-sw-p">GPIO34 · 3V3 · GND</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><circle cx="24" cy="14" r="8"/><path d="M2 14h14M32 14h14"/></svg>
+          <div><p class="part-name" data-i18n="c-out">Manual outage</p><p class="part-pin" data-i18n="c-out-p">GPIO14 · GND · key G</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><path d="M8 22h32M24 22 V8M18 8h12"/></svg>
+          <div><p class="part-name" data-i18n="c-pot">Zone A power</p><p class="part-pin" data-i18n="c-pot-p">GPIO35 · potentiometer, a stand-in</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><path d="M20 24 V10a4 4 0 0 1 8 0V24zM16 24h16"/></svg>
+          <div><p class="part-name" data-i18n="c-temp">Fridge temperature</p><p class="part-pin" data-i18n="c-temp-p">GPIO4 · DS18B20 · 4.7 kΩ to 3V3</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><circle cx="24" cy="14" r="8"/><path d="M2 14h14M32 14h14"/></svg>
+          <div><p class="part-name" data-i18n="c-k">SIM clock</p><p class="part-pin" data-i18n="c-k-p">GPIO13 · key K · 1, 60, or 600</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><circle cx="24" cy="14" r="7"/><path d="M24 7 V3M20 5l4 4 4-4"/></svg>
+          <div><p class="part-name" data-i18n="c-bz">Alarm</p><p class="part-pin" data-i18n="c-bz-p">GPIO25 · buzzer</p></div>
+        </li>
+        <li class="core">
+          <svg viewBox="0 0 48 28" aria-hidden="true"><rect x="10" y="4" width="28" height="20"/><path d="M10 10h-6M10 18h-6M38 10h6M38 18h6"/></svg>
+          <div><p class="part-name" data-i18n="c-esp">ESP32 DevKit C V4</p><p class="part-pin" data-i18n="c-norelay">Zone A has no relay. The fridge stays closed.</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><rect x="6" y="6" width="14" height="16"/><path d="M26 20h8l6-8M40 12 V8"/></svg>
+          <div><p class="part-name" data-i18n="c-rb">Relay B · hallway</p><p class="part-pin" data-i18n="c-rb-p">GPIO26 · NO contact to the green LED, 220 Ω</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><rect x="6" y="6" width="14" height="16"/><path d="M26 20h8l6-8M40 12 V8"/></svg>
+          <div><p class="part-name" data-i18n="c-rc">Relay C · waiting room</p><p class="part-pin" data-i18n="c-rc-p">GPIO27 · NO contact to the yellow LED, 220 Ω</p></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 28" aria-hidden="true"><rect x="8" y="4" width="32" height="20"/><path d="M14 20h20"/></svg>
+          <div><p class="part-name" data-i18n="c-oled">OLED</p><p class="part-pin" data-i18n="c-oled-p">SDA GPIO21 · SCL GPIO22 · address 0x3C</p></div>
+        </li>
+      </ol>
+      <figcaption data-i18n="c-cap">The circuit running in Wokwi. Power and ground are shared. The potentiometer stands in for a future INA219 on zone A, which Wokwi does not include.</figcaption>
+    </figure>
+    <figure class="cirkit">
+      <img src="cirkit.png" width="1550" height="1218" alt="Cirkit Designer schematic of the intended hardware: ESP32, two relays, LEDs, OLED, buzzer, and an INA219" data-i18n="c-cirkit-alt">
+      <figcaption data-i18n="c-cirkit">Cirkit Designer drawing of the intended hardware. It adds an INA219 in series with zone A. Wokwi has no such part, so the simulation uses the potentiometer. This drawing is not a built prototype.</figcaption>
+    </figure>
+    <p class="limits" data-i18n="p-limits">ClinicKeep does not generate energy. It is not a certified medical device and it does not replace a cold-chain protocol. It does not use machine learning. A physical prototype is the next step. A district radio report over LoRaWAN is drawn as architecture only. It is not simulated, and it would report, not control.</p>
+    <p>
+      <a class="action" href="https://clinickeep.focampo.com" data-i18n="demo">Open the simulated demo →</a>
+      <a class="action" href="https://clinickeep.focampo.com/calc/" data-i18n="calc">Open the sizing calculator →</a>
+      <a class="action" href="https://github.com/focampok/clinickeep" data-i18n="repo">Read the repository →</a>
+    </p>
+  </section>
+</article>
+<script src="i18n.js"></script>
+</body>
+</html>
