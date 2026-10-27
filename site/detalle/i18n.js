@@ -3,6 +3,7 @@
     en: {
       wordmark: "CLINICKEEP",
       "back-case": "← Case",
+      "page-title": "ClinicKeep · Technical detail",
       subtitle: "PERFORMANCE SPECIFICATION · SIMULATED PROTOTYPE",
       disclaimer: "Not a certified device. Simulated. Does not generate energy.",
       "th-item": "ITEM",
@@ -83,6 +84,7 @@
     "es-419": {
       wordmark: "CLINICKEEP",
       "back-case": "← Caso",
+      "page-title": "ClinicKeep · Detalle técnico",
       subtitle: "ESPECIFICACIÓN DE DESEMPEÑO · PROTOTIPO SIMULADO",
       disclaimer: "No es un dispositivo certificado. Simulado. No genera energía.",
       "th-item": "ÍTEM",
