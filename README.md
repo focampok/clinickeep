@@ -49,7 +49,7 @@ cd clinickeep
 python3 -m venv .venv
 source .venv/bin/activate
 pip install pytest matplotlib
-pytest -q          # 88 passed (without node: 83 passed, 5 skipped)
+pytest -q          # 103 passed (without node: 98 passed, 5 skipped)
 python3 demo.py    # one simulated outage, with and without ClinicKeep
 ```
 
