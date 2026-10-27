@@ -356,3 +356,10 @@ body.plates-only .sheet .semantic { visibility: hidden; }
   .r-table-lower .spec-table { font-size: 1rem; }
   .rest { width: calc(100% - 2rem); }
 }
+
+@media (max-width: 520px) {
+  .spec-table col.item { width: 32%; }
+  .spec-table col.val { width: 38%; }
+  .spec-table col.mark { width: 30%; }
+  .spec-table .mark { overflow-wrap: anywhere; }
+}
